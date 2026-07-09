@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - The App Cabana</title>
+  <style>
+    body { font-family: sans-serif; background: #0a0e27; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .form-container { background: #1a1f3a; padding: 40px; border-radius: 8px; width: 100%; max-width: 400px; border: 1px solid #333; }
+    h1 { margin-bottom: 30px; text-align: center; color: #667eea; }
+    label { display: block; margin-top: 15px; margin-bottom: 5px; font-size: 14px; }
+    input { width: 100%; padding: 10px; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px; }
+    button { width: 100%; margin-top: 20px; padding: 10px; background: #667eea; border: none; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #764ba2; }
+    .error { color: #ff6b6b; margin-bottom: 20px; }
+    .link { text-align: center; margin-top: 20px; }
+    .link a { color: #667eea; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Login</h1>
+    <% if (error) { %>
+      <div class="error"><%= error %></div>
+    <% } %>
+    <form method="POST">
+      <label>Email</label>
+      <input type="email" name="email" required>
+      <label>Password</label>
+      <input type="password" name="password" required>
+      <button type="submit">Login</button>
+    </form>
+    <div class="link">
+      Don't have an account? <a href="/auth/register">Register</a>
+    </div>
+  </div>
+</body>
+</html>

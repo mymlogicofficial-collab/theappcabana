@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload - The App Cabana</title>
+  <style>
+    body { font-family: sans-serif; background: #0a0e27; color: #fff; }
+    .container { max-width: 600px; margin: 0 auto; padding: 40px; }
+    .form { background: #1a1f3a; padding: 40px; border-radius: 8px; border: 1px solid #333; }
+    h1 { margin-bottom: 30px; }
+    label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 10px; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px; margin-top: 5px; }
+    button { width: 100%; margin-top: 20px; padding: 12px; background: #667eea; border: none; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #764ba2; }
+    .error { color: #ff6b6b; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form">
+      <h1>Upload New Product</h1>
+      <% if (error) { %>
+        <div class="error"><%= error %></div>
+      <% } %>
+      <form method="POST" enctype="multipart/form-data">
+        <label>Product Type *</label>
+        <select name="type" required>
+          <option>Select type...</option>
+          <option value="app">App</option>
+          <option value="music">Music</option>
+          <option value="art">Digital Art</option>
+        </select>
+
+        <label>Title *</label>
+        <input type="text" name="title" required>
+
+        <label>Description</label>
+        <textarea name="description" rows="4"></textarea>
+
+        <label>Price (USD) *</label>
+        <input type="number" name="price" step="0.99" min="0" required>
+
+        <label>File *</label>
+        <input type="file" name="file" required>
+
+        <button type="submit">Upload Product</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
