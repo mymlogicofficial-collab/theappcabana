@@ -71,6 +71,7 @@ async function initDatabase() {
     console.log('Database initialized successfully');
   } catch (err) {
     console.error('Database init error:', err.message);
+    throw err;
   }
 }
 

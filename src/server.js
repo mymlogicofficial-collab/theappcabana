@@ -83,12 +83,22 @@ app.use((req, res) => {
 });
 
 async function start() {
-  await initDatabase();
+  try {
+    await initDatabase();
+    console.log('Database ready, starting server...');
+  } catch (err) {
+    console.error('Failed to initialize database, aborting startup:', err);
+    process.exit(1);
+  }
+
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`[TheAppCabana] Running on http://0.0.0.0:${PORT}`);
   });
 }
 
-start().catch(console.error);
+start().catch((err) => {
+  console.error('Fatal error during startup:', err);
+  process.exit(1);
+});
 
 module.exports = app;
