@@ -9,8 +9,8 @@ router.get('/browse', async (req, res) => {
     
     let query = `
       SELECT p.*, u.display_name as creator,
-        COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id = p.id), 0) as avg_rating,
-        COALESCE((SELECT COUNT(*) FROM reviews WHERE product_id = p.id), 0) as review_count
+        COALESCE((SELECT AVG(rating) FROM reviews WHERE reviews.product_id = p.id), 0) as avg_rating,
+        COALESCE((SELECT COUNT(*) FROM reviews WHERE reviews.product_id = p.id), 0) as review_count
       FROM products p
       LEFT JOIN users u ON p.user_id = u.id
       WHERE p.is_approved = true
@@ -54,8 +54,8 @@ router.get('/product/:slug', async (req, res) => {
   try {
     const product = await pool.query(`
       SELECT p.*, u.display_name as creator, u.username,
-        COALESCE((SELECT AVG(rating) FROM reviews WHERE product_id = p.id), 0) as avg_rating,
-        COALESCE((SELECT COUNT(*) FROM reviews WHERE product_id = p.id), 0) as review_count
+        COALESCE((SELECT AVG(rating) FROM reviews WHERE reviews.product_id = p.id), 0) as avg_rating,
+        COALESCE((SELECT COUNT(*) FROM reviews WHERE reviews.product_id = p.id), 0) as review_count
       FROM products p
       LEFT JOIN users u ON p.user_id = u.id
       WHERE p.slug = $1 AND p.is_approved = true
@@ -83,3 +83,4 @@ router.get('/product/:slug', async (req, res) => {
 });
 
 module.exports = router;
+
