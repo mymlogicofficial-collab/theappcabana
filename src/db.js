@@ -68,6 +68,19 @@ async function initDatabase() {
       )
     `);
 
+    // Ensure reviews table has product_id column (for existing databases)
+    try {
+      await pool.query(`
+        ALTER TABLE reviews ADD COLUMN product_id INTEGER REFERENCES products(id) ON DELETE CASCADE
+      `);
+      console.log('Added product_id column to reviews table');
+    } catch (err) {
+      // Column already exists, ignore
+      if (!err.message.includes('already exists')) {
+        console.warn('Warning adding product_id to reviews:', err.message);
+      }
+    }
+
     console.log('Database initialized successfully');
   } catch (err) {
     console.error('Database init error:', err.message);
@@ -76,3 +89,4 @@ async function initDatabase() {
 }
 
 module.exports = { pool, initDatabase };
+
