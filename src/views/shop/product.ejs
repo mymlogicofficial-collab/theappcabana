@@ -34,11 +34,13 @@
     <a href="/shop/browse" style="color: #667eea;">← Back to Browse</a>
 
     <div class="product-header">
-      <div class="product-image <%= product.cover_url ? '' : 'empty' %>">
+      <div class="product-image <%= product.cover_url || product.file_path ? '' : 'empty' %>">
         <% if (product.cover_url) { %>
           <img src="<%= product.cover_url %>" alt="<%= product.title %>">
         <% } else if (product.preview_url) { %>
           <img src="<%= product.preview_url %>" alt="<%= product.title %>">
+        <% } else if (product.file_path && (product.file_path.match(/\.(jpg|jpeg|png|gif|webp)$/i))) { %>
+          <img src="<%= product.file_path %>" alt="<%= product.title %>">
         <% } else { %>
           No Image Available
         <% } %>
