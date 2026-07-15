@@ -92,5 +92,27 @@ router.get('/product/:slug', async (req, res) => {
   }
 });
 
+/**
+ * GET /shop/checkout/:slug
+ * Render checkout page for a product
+ */
+router.get('/checkout/:slug', async (req, res) => {
+  try {
+    const product = await pool.query(`
+      SELECT p.* FROM products p
+      WHERE p.slug = $1 AND p.is_approved = true
+    `, [req.params.slug]);
+    
+    if (product.rows.length === 0) {
+      return res.status(404).render('error', { message: 'Product not found' });
+    }
+    
+    res.render('shop/checkout', { product: product.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('error', { message: 'Something went wrong' });
+  }
+});
+
 module.exports = router;
 
