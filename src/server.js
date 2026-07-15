@@ -37,6 +37,7 @@ app.use(session({
 
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
+  res.locals.publicKey = process.env.STRIPE_PUBLIC_KEY;
   next();
 });
 
@@ -45,13 +46,15 @@ const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
 const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
-const zazzleRoutes = require('./routes/zazzle');
+const printfulRoutes = require('./routes/printful');
+const checkoutRoutes = require('./routes/checkout');
 
 app.use('/auth', authRoutes);
 app.use('/shop', shopRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
-app.use('/api/zazzle', zazzleRoutes);
+app.use('/api/printful', printfulRoutes);
+app.use('/checkout', checkoutRoutes);
 
 // Homepage
 app.get('/', async (req, res) => {
