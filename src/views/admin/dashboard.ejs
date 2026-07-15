@@ -5,46 +5,114 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - The App Cabana</title>
   <style>
-    body { font-family: sans-serif; background: #0a0e27; color: #fff; }
-    .container { max-width: 1000px; margin: 0 auto; padding: 40px; }
-    h1 { margin-bottom: 30px; }
-    .btn { display: inline-block; padding: 12px 30px; background: #667eea; color: #fff; text-decoration: none; border-radius: 8px; margin-bottom: 20px; }
-    .products-table { width: 100%; border-collapse: collapse; }
-    .products-table tr { border-bottom: 1px solid #333; }
-    .products-table th, .products-table td { padding: 15px; text-align: left; }
-    .products-table th { background: #1a1f3a; font-weight: bold; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #fff; }
+    .header { padding: 20px 40px; background: #1a1f3a; border-bottom: 1px solid #333; }
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; font-weight: 500; margin-bottom: 20px; }
+    .back-btn:hover { color: #7c8ff7; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+    .page-title { font-size: 32px; margin-bottom: 30px; }
+    .btn { display: inline-block; padding: 12px 30px; background: #667eea; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; }
+    .btn:hover { background: #5568d3; }
+    .action-bar { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+    .section-title { font-size: 18px; margin-bottom: 20px; font-weight: 600; }
+    
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+    .product-card { background: #1a1f3a; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
+    .product-thumb { width: 100%; height: 200px; background: #0a0e27; overflow: hidden; }
+    .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .product-info { padding: 20px; }
+    .product-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .product-type { display: inline-block; font-size: 11px; background: #2a3050; padding: 4px 10px; border-radius: 3px; margin-bottom: 10px; }
+    .product-price { font-size: 18px; font-weight: 700; color: #667eea; margin-bottom: 10px; }
+    .product-stats { font-size: 12px; color: #999; margin-bottom: 15px; }
+    .product-status { 
+      padding: 6px 12px; 
+      border-radius: 4px; 
+      font-size: 12px; 
+      font-weight: 500;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+    .status-live { background: rgba(81, 207, 102, 0.2); color: #51cf66; }
+    .status-pending { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+    
+    .product-actions { display: flex; gap: 10px; }
+    .product-actions a, .product-actions button { 
+      flex: 1; 
+      padding: 8px 12px; 
+      border: none; 
+      border-radius: 4px; 
+      font-size: 13px; 
+      font-weight: 500; 
+      text-decoration: none; 
+      cursor: pointer;
+      text-align: center;
+    }
+    .action-view { background: #2a3050; color: #667eea; }
+    .action-view:hover { background: #3a4050; }
+    .action-edit { background: #667eea; color: #fff; }
+    .action-edit:hover { background: #5568d3; }
+    .action-delete { background: #d9534f; color: #fff; }
+    .action-delete:hover { background: #c9423f; }
+    
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-state-icon { font-size: 48px; margin-bottom: 20px; }
+    .empty-state-text { color: #999; margin-bottom: 30px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Your Dashboard</h1>
-    <a href="/admin/upload" class="btn">+ Upload New Product</a>
+  <div class="header">
+    <a href="/" class="back-btn">← Back to Store</a>
+  </div>
 
-    <h2>Your Products</h2>
-    <table class="products-table">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Type</th>
-          <th>Price</th>
-          <th>Downloads</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
+  <div class="container">
+    <h1 class="page-title">Dashboard</h1>
+    
+    <div class="action-bar">
+      <a href="/admin/upload" class="btn">+ Upload Digital Product</a>
+      <a href="/admin/upload-physical" class="btn" style="background: #764ba2;">+ Upload Physical Product</a>
+    </div>
+
+    <h2 class="section-title">Your Products</h2>
+
+    <% if (products.length === 0) { %>
+      <div class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <div class="empty-state-text">No products yet. Upload your first product to get started!</div>
+        <a href="/admin/upload" class="btn">Upload Product</a>
+      </div>
+    <% } else { %>
+      <div class="products-grid">
         <% products.forEach(p => { %>
-          <tr>
-            <td><%= p.title %></td>
-            <td><%= p.type %></td>
-            <td>$<%= (p.price_cents / 100).toFixed(2) %></td>
-            <td><%= p.download_count %></td>
-            <td><%= p.is_approved ? '✓ Live' : '⏳ Pending' %></td>
-            <td><a href="/shop/product/<%= p.slug %>" style="color: #667eea;">View</a></td>
-          </tr>
+          <div class="product-card">
+            <div class="product-thumb">
+              <% if (p.cover_url) { %>
+                <img src="<%= p.cover_url %>" alt="<%= p.title %>">
+              <% } else { %>
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666;">No Image</div>
+              <% } %>
+            </div>
+            <div class="product-info">
+              <span class="product-type"><%= p.type.toUpperCase() %></span>
+              <h3 class="product-title"><%= p.title %></h3>
+              <div class="product-price">$<%= (p.price_cents / 100).toFixed(2) %></div>
+              <div class="product-stats">
+                <%= p.download_count %> downloads
+              </div>
+              <div class="product-status <%= p.is_approved ? 'status-live' : 'status-pending' %>">
+                <%= p.is_approved ? '✓ Live' : '⏳ Pending Approval' %>
+              </div>
+              <div class="product-actions">
+                <a href="/shop/product/<%= p.slug %>" class="action-view">View</a>
+                <a href="/admin/edit/<%= p.id %>" class="action-edit">Edit</a>
+              </div>
+            </div>
+          </div>
         <% }) %>
-      </tbody>
-    </table>
+      </div>
+    <% } %>
   </div>
 </body>
 </html>
+

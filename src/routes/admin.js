@@ -82,6 +82,66 @@ router.post('/upload', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 
   }
 });
 
+// Edit product page
+router.get('/edit/:id', requireAuth, async (req, res) => {
+  try {
+    const product = await pool.query(
+      'SELECT * FROM products WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.session.user.id]
+    );
+
+    if (product.rows.length === 0) {
+      return res.status(404).render('error', { message: 'Product not found' });
+    }
+
+    res.render('admin/edit', { product: product.rows[0], error: null });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('error', { message: 'Something went wrong' });
+  }
+});
+
+// Update product
+router.post('/edit/:id', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 }]), async (req, res) => {
+  const { title, description, price, type, is_featured } = req.body;
+
+  try {
+    // Verify ownership
+    const product = await pool.query(
+      'SELECT * FROM products WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.session.user.id]
+    );
+
+    if (product.rows.length === 0) {
+      return res.status(404).render('error', { message: 'Product not found' });
+    }
+
+    const p = product.rows[0];
+    const price_cents = Math.round(parseFloat(price) * 100) || 0;
+    let coverUrl = p.cover_url;
+
+    // Update cover if new one uploaded
+    if (req.files.cover) {
+      coverUrl = `/uploads/${req.files.cover[0].filename}`;
+    }
+
+    await pool.query(`
+      UPDATE products 
+      SET title = $1, description = $2, price_cents = $3, type = $4, cover_url = $5, is_featured = $6, updated_at = NOW()
+      WHERE id = $7
+    `, [title, description, price_cents, type, coverUrl, is_featured === 'true', req.params.id]);
+
+    res.redirect(`/shop/product/${p.slug}`);
+  } catch (err) {
+    console.error(err);
+    const product = await pool.query(
+      'SELECT * FROM products WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.session.user.id]
+    );
+    res.render('admin/edit', { product: product.rows[0], error: 'Failed to update product' });
+  }
+});
+
 // Physical product upload page
 router.get('/upload-physical', requireAuth, (req, res) => {
   res.render('admin/upload-physical', { error: null });
