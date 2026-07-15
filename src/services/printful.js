@@ -1,4 +1,4 @@
-const axios = require('axios');
+const https = require('https');
 
 const PRINTFUL_API_URL = 'https://api.printful.com';
 const PRINTFUL_API_KEY = process.env.PRINTFUL_API_KEY;
@@ -7,14 +7,41 @@ if (!PRINTFUL_API_KEY) {
   console.warn('WARNING: PRINTFUL_API_KEY not set. Printful integration will not work.');
 }
 
-// Axios instance with Printful private token auth
-const printfulClient = axios.create({
-  baseURL: PRINTFUL_API_URL,
-  headers: {
-    'Authorization': `Bearer ${PRINTFUL_API_KEY || ''}`,
-    'Content-Type': 'application/json'
-  }
-});
+// Helper to make HTTPS requests
+function makeRequest(method, path, data = null) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(path, PRINTFUL_API_URL);
+    
+    const options = {
+      method,
+      headers: {
+        'Authorization': `Bearer ${PRINTFUL_API_KEY || ''}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    const req = https.request(url, options, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const result = JSON.parse(body);
+          if (res.statusCode >= 400) {
+            reject(new Error(`Printful API error: ${res.statusCode} ${JSON.stringify(result)}`));
+          } else {
+            resolve(result);
+          }
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    if (data) req.write(JSON.stringify(data));
+    req.end();
+  });
+}
 
 // Printful product ID mappings (catalog products)
 const PRODUCT_TYPE_MAP = {
@@ -33,8 +60,8 @@ const PRODUCT_TYPE_MAP = {
  */
 async function getProductCatalog() {
   try {
-    const response = await printfulClient.get('/catalog/products');
-    return response.data.result || [];
+    const response = await makeRequest('GET', '/catalog/products');
+    return response.result || [];
   } catch (err) {
     console.error('Error fetching Printful catalog:', err.message);
     return [];
@@ -51,8 +78,8 @@ async function getProductVariants(productType) {
       throw new Error(`Unknown product type: ${productType}`);
     }
 
-    const response = await printfulClient.get(`/catalog/products/${productId}`);
-    const product = response.data.result;
+    const response = await makeRequest('GET', `/catalog/products/${productId}`);
+    const product = response.result;
 
     // Extract variants with names and prices
     const variants = product.variants.map(v => ({
@@ -82,7 +109,7 @@ async function createPrintfulProduct(data) {
     }
 
     // Create product in your store with selected variants
-    const response = await printfulClient.post('/products', {
+    const response = await makeRequest('POST', '/products', {
       external_id: data.external_id, // Link to our product ID
       name: data.name,
       description: data.description || '',
@@ -92,7 +119,7 @@ async function createPrintfulProduct(data) {
       }))
     });
 
-    return response.data.result;
+    return response.result;
   } catch (err) {
     console.error('Error creating Printful product:', err.message);
     throw err;
@@ -104,32 +131,11 @@ async function createPrintfulProduct(data) {
  */
 async function getPrintfulProduct(printfulProductId) {
   try {
-    const response = await printfulClient.get(`/products/${printfulProductId}`);
-    return response.data.result;
+    const response = await makeRequest('GET', `/products/${printfulProductId}`);
+    return response.result;
   } catch (err) {
     console.error(`Error fetching Printful product ${printfulProductId}:`, err.message);
     return null;
-  }
-}
-
-/**
- * Upload a file to Printful (for designs)
- */
-async function uploadFile(fileData) {
-  try {
-    const formData = new FormData();
-    formData.append('file', fileData);
-
-    const response = await printfulClient.post('/files', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-
-    return response.data.result;
-  } catch (err) {
-    console.error('Error uploading file to Printful:', err.message);
-    throw err;
   }
 }
 
@@ -138,7 +144,7 @@ async function uploadFile(fileData) {
  */
 async function createPrintfulOrder(data) {
   try {
-    const response = await printfulClient.post('/orders', {
+    const response = await makeRequest('POST', '/orders', {
       external_id: data.external_id, // Link to our purchase/order ID
       shipping: data.shipping_method || 'STANDARD',
       recipient: {
@@ -155,7 +161,7 @@ async function createPrintfulOrder(data) {
       items: data.items // [{ product_id, variant_id, quantity }, ...]
     });
 
-    return response.data.result;
+    return response.result;
   } catch (err) {
     console.error('Error creating Printful order:', err.message);
     throw err;
@@ -167,8 +173,8 @@ async function createPrintfulOrder(data) {
  */
 async function getPrintfulOrderStatus(printfulOrderId) {
   try {
-    const response = await printfulClient.get(`/orders/${printfulOrderId}`);
-    return response.data.result;
+    const response = await makeRequest('GET', `/orders/${printfulOrderId}`);
+    return response.result;
   } catch (err) {
     console.error(`Error fetching Printful order ${printfulOrderId}:`, err.message);
     return null;
@@ -180,7 +186,7 @@ async function getPrintfulOrderStatus(printfulOrderId) {
  */
 async function estimateShipping(data) {
   try {
-    const response = await printfulClient.post('/shipping/rates', {
+    const response = await makeRequest('POST', '/shipping/rates', {
       recipient: {
         address1: data.address_line1,
         address2: data.address_line2 || '',
@@ -192,7 +198,7 @@ async function estimateShipping(data) {
       items: data.items
     });
 
-    return response.data.result;
+    return response.result;
   } catch (err) {
     console.error('Error estimating shipping:', err.message);
     return null;
@@ -204,8 +210,8 @@ async function estimateShipping(data) {
  */
 async function confirmOrder(printfulOrderId) {
   try {
-    const response = await printfulClient.post(`/orders/${printfulOrderId}/confirm`);
-    return response.data.result;
+    const response = await makeRequest('POST', `/orders/${printfulOrderId}/confirm`);
+    return response.result;
   } catch (err) {
     console.error(`Error confirming Printful order ${printfulOrderId}:`, err.message);
     throw err;
@@ -218,7 +224,6 @@ module.exports = {
   getProductVariants,
   createPrintfulProduct,
   getPrintfulProduct,
-  uploadFile,
   createPrintfulOrder,
   getPrintfulOrderStatus,
   estimateShipping,
