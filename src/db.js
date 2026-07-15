@@ -68,13 +68,13 @@ async function initDatabase() {
       )
     `);
 
-    // Physical product tracking (Zazzle integration)
+    // Physical product tracking (Printful integration)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS physical_products (
         id SERIAL PRIMARY KEY,
         product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-        zazzle_design_id VARCHAR(100),
-        zazzle_category VARCHAR(100),
+        printful_product_id INTEGER,
+        printful_category VARCHAR(100),
         selected_variants TEXT,
         design_file_url TEXT,
         sync_status VARCHAR(50) DEFAULT 'pending',
@@ -89,12 +89,27 @@ async function initDatabase() {
       CREATE TABLE IF NOT EXISTS physical_orders (
         id SERIAL PRIMARY KEY,
         purchase_id INTEGER NOT NULL REFERENCES purchases(id) ON DELETE CASCADE,
-        zazzle_order_id VARCHAR(100),
+        printful_order_id INTEGER,
         order_status VARCHAR(50) DEFAULT 'pending',
         shipping_cost_cents INTEGER,
         tracking_number VARCHAR(100),
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Donations table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS donations (
+        id SERIAL PRIMARY KEY,
+        cause VARCHAR(50) NOT NULL,
+        amount_cents INTEGER NOT NULL,
+        donor_name VARCHAR(200),
+        donor_email VARCHAR(255),
+        is_anonymous BOOLEAN DEFAULT false,
+        stripe_payment_intent_id TEXT,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW()
       )
     `);
 
@@ -125,12 +140,12 @@ async function initDatabase() {
     // Add printful_category to products table if needed
     try {
       await pool.query(`
-        ALTER TABLE products ADD COLUMN zazzle_category VARCHAR(100)
+        ALTER TABLE products ADD COLUMN printful_category VARCHAR(100)
       `);
-      console.log('Added zazzle_category to products table');
+      console.log('Added printful_category to products table');
     } catch (err) {
       if (!err.message.includes('already exists')) {
-        console.warn('Warning adding zazzle_category:', err.message);
+        console.warn('Warning adding printful_category:', err.message);
       }
     }
 
