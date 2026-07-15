@@ -122,7 +122,7 @@ async function initDatabase() {
       }
     }
 
-    // Add zazzle_category to products table if needed
+    // Add printful_category to products table if needed
     try {
       await pool.query(`
         ALTER TABLE products ADD COLUMN zazzle_category VARCHAR(100)

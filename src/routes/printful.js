@@ -4,29 +4,19 @@ const printful = require('../services/printful');
 
 const router = express.Router();
 
-// Map product categories to Printful product IDs
-const CATEGORY_TO_PRINTFUL = {
-  't-shirts': 1,
-  'hoodies': 18,
-  'mugs': 10,
-  'hats': 33,
-  'phone-cases': 46,
-  'pillows': 48,
-  'blankets': 47,
-  'stickers': 36
-};
-
-// Get Printful variants for a category
+/**
+ * GET /api/printful/variants/:category
+ * Fetch available variants for a product type
+ */
 router.get('/variants/:category', async (req, res) => {
   try {
     const { category } = req.params;
-    const printfulProductId = CATEGORY_TO_PRINTFUL[category];
+    const variants = await printful.getProductVariants(category);
 
-    if (!printfulProductId) {
-      return res.status(400).json({ error: 'Unknown category' });
+    if (variants.length === 0) {
+      return res.status(400).json({ error: 'Unknown product category or no variants available' });
     }
 
-    const variants = await printful.getProductVariants(printfulProductId);
     res.json({ category, variants });
   } catch (err) {
     console.error(err);
@@ -34,7 +24,10 @@ router.get('/variants/:category', async (req, res) => {
   }
 });
 
-// Sync product to Printful catalog
+/**
+ * POST /api/printful/sync-product/:product_id
+ * Sync design/product to Printful catalog
+ */
 router.post('/sync-product/:product_id', async (req, res) => {
   try {
     const { product_id } = req.params;
@@ -63,14 +56,14 @@ router.post('/sync-product/:product_id', async (req, res) => {
 
     // Save Printful sync info to our DB
     await pool.query(`
-      INSERT INTO physical_products (product_id, printful_product_id, printful_category, selected_variants, sync_status)
-      VALUES ($1, $2, $3, $4, 'synced')
+      INSERT INTO physical_products (product_id, printful_product_id, printful_category, selected_variants, design_file_url, sync_status)
+      VALUES ($1, $2, $3, $4, $5, 'synced')
       ON CONFLICT (product_id) DO UPDATE SET
         printful_product_id = $2,
         printful_category = $3,
         selected_variants = $4,
         sync_status = 'synced'
-    `, [product_id, printfulProduct.id, category, JSON.stringify(selected_variants)]);
+    `, [product_id, printfulProduct.id, category, JSON.stringify(selected_variants), p.cover_url]);
 
     res.json({ ok: true, printful_product_id: printfulProduct.id });
   } catch (err) {
@@ -79,7 +72,10 @@ router.post('/sync-product/:product_id', async (req, res) => {
   }
 });
 
-// Get product sync status
+/**
+ * GET /api/printful/product-status/:product_id
+ * Get product sync status
+ */
 router.get('/product-status/:product_id', async (req, res) => {
   try {
     const { product_id } = req.params;

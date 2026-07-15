@@ -116,7 +116,7 @@ router.post('/upload-physical', requireAuth, upload.single('design'), async (req
     
     // Sync to Zazzle
     try {
-      const zazzleDesign = await zazzle.createZazzleDesign({
+      const printfulProduct = await printful.createPrintfulProduct({
         external_id: `cabana-product-${productId}`,
         name: title,
         description: description || '',
@@ -142,7 +142,7 @@ router.post('/upload-physical', requireAuth, upload.single('design'), async (req
       `, [productId, category, JSON.stringify({ colors, sizes }), designUrl]);
 
       res.render('admin/upload-physical', { 
-        error: `Product created but failed to sync to Zazzle: ${zazzleErr.message}. Retry sync manually later.` 
+        error: `Product created but failed to sync to Printful: ${printfulErr.message}. Retry sync manually later.` 
       });
     }
   } catch (err) {
