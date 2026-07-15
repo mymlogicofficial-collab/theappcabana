@@ -110,12 +110,14 @@ async function initDatabase() {
       }
     }
 
+    // Ensure purchases table has product_id column (for existing databases)
     try {
       await pool.query(`
         ALTER TABLE purchases ADD COLUMN product_id INTEGER REFERENCES products(id) ON DELETE CASCADE
       `);
       console.log('Added product_id column to purchases table');
     } catch (err) {
+      // Column already exists, ignore
       if (!err.message.includes('already exists')) {
         console.warn('Warning adding product_id to purchases:', err.message);
       }
