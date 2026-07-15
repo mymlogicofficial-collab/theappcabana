@@ -116,22 +116,6 @@ router.post('/upload-physical', requireAuth, upload.single('design'), async (req
     
     // Sync to Printful
     try {
-      const CATEGORY_TO_PRINTFUL = {
-        't-shirts': 1,
-        'hoodies': 18,
-        'mugs': 10,
-        'hats': 33,
-        'phone-cases': 46,
-        'pillows': 48,
-        'blankets': 47,
-        'stickers': 36
-      };
-
-      const printfulProductId = CATEGORY_TO_PRINTFUL[category];
-      if (!printfulProductId) {
-        throw new Error('Unknown product category');
-      }
-
       const printfulProduct = await printful.createPrintfulProduct({
         external_id: `cabana-product-${productId}`,
         name: title,
@@ -156,7 +140,7 @@ router.post('/upload-physical', requireAuth, upload.single('design'), async (req
       `, [productId, category, JSON.stringify(variants), designUrl]);
 
       res.render('admin/upload-physical', { 
-        error: `Product created but failed to sync to Printful: ${printfulErr.message}` 
+        error: `Product created but failed to sync to Printful: ${printfulErr.message}. Retry sync manually later.` 
       });
     }
   } catch (err) {
