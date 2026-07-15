@@ -36,25 +36,26 @@
     .back-link:hover { text-decoration: underline; }
     .error { background: #2a1a1a; color: #ff6b6b; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
     .info { background: #1a2a3a; color: #aaa; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
-    .variants-section { background: #1a1f3a; padding: 15px; border-radius: 4px; margin-top: 10px; }
+    .variants-section { background: #1a1f3a; padding: 15px; border-radius: 4px; margin-top: 10px; max-height: 250px; overflow-y: auto; }
     .variant-item { margin-bottom: 10px; }
     .variant-item input { margin-right: 8px; width: auto; display: inline-block; }
-    .variant-item label { display: inline; margin-bottom: 0; margin-left: 5px; }
+    .variant-item label { display: inline; margin-bottom: 0; margin-left: 5px; font-size: 14px; }
+    .variant-item small { display: block; margin-left: 24px; color: #999; font-size: 12px; }
   </style>
 </head>
 <body>
   <div class="container">
     <a href="/admin/upload" class="back-link">← Back to Digital Upload</a>
     
-    <h1>Upload Physical Product</h1>
-    <p style="color: #aaa; margin-bottom: 20px;">Design will be synced to Printful catalog automatically</p>
+    <h1>Upload Physical Product to Printful</h1>
+    <p style="color: #aaa; margin-bottom: 20px;">Design will be synced to Printful automatically for on-demand printing</p>
 
     <% if (error) { %>
       <div class="error"><%= error %></div>
     <% } %>
 
     <div class="info">
-      💡 Upload your design/mockup image. Select product type (shirt, mug, hat, etc.) and colors/sizes will auto-populate from Printful.
+      💡 Upload design image. Select product type (shirt, mug, hat, etc.). Choose which size/color variants to offer. We'll sync to Printful and handle fulfillment.
     </div>
 
     <form method="POST" action="/admin/upload-physical" enctype="multipart/form-data">
@@ -85,25 +86,25 @@
       </div>
 
       <div class="form-group">
-        <label for="price">Base Price ($) *</label>
+        <label for="price">Your Selling Price ($) *</label>
         <input type="number" id="price" name="price" step="0.01" min="0" required placeholder="10.00">
-        <small style="color: #aaa; margin-top: 5px; display: block;">Price you want to sell at (will add Printful cost on top)</small>
+        <small style="color: #aaa; margin-top: 5px; display: block;">Price you want to sell at. Printful cost added on top, you keep the margin.</small>
       </div>
 
       <div class="form-group">
-        <label for="design">Design Image/Mockup *</label>
+        <label for="design">Design Image *</label>
         <input type="file" id="design" name="design" accept="image/*" required>
-        <small style="color: #aaa; margin-top: 5px; display: block;">This will be the product cover image and synced to Printful</small>
+        <small style="color: #aaa; margin-top: 5px; display: block;">Design for the product (will be the cover/thumbnail)</small>
       </div>
 
-      <div id="variants-loading" style="display: none; color: #aaa;">
-        Loading available sizes/colors...
+      <div id="variants-loading" style="display: none; color: #aaa; text-align: center; padding: 20px;">
+        Loading variants from Printful...
       </div>
 
       <div id="variants-section" class="form-group" style="display: none;">
-        <label>Available Variants (Auto-selected)</label>
+        <label>Available Variants (Select which to offer) *</label>
         <div id="variants-list" class="variants-section">
-          <!-- Populated by JavaScript from Printful API -->
+          <!-- Populated by JavaScript -->
         </div>
       </div>
 
@@ -132,17 +133,20 @@
             div.className = 'variant-item';
             div.innerHTML = `
               <input type="checkbox" name="variants" value="${variant.id}" id="variant-${variant.id}" checked>
-              <label for="variant-${variant.id}">${variant.name} - $${(variant.price / 100).toFixed(2)}</label>
+              <label for="variant-${variant.id}"><strong>${variant.name}</strong></label>
+              <small>Stock: ${variant.in_stock ? '✓ Available' : '✗ Out of stock'}</small>
             `;
             variantsList.appendChild(div);
           });
 
           document.getElementById('variants-section').style.display = 'block';
           document.getElementById('variants-loading').style.display = 'none';
+        } else {
+          document.getElementById('variants-loading').innerHTML = '❌ No variants found for this product type';
         }
       } catch (err) {
         console.error('Error loading variants:', err);
-        document.getElementById('variants-loading').style.display = 'none';
+        document.getElementById('variants-loading').innerHTML = '❌ Failed to load variants';
       }
     }
   </script>
