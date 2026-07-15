@@ -15,7 +15,15 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage, limits: { fileSize: 500 * 1024 * 1024 } });
+const upload = multer({ 
+  storage, 
+  limits: { fileSize: 500 * 1024 * 1024 },
+  fields: [
+    { name: 'cover', maxCount: 1 },
+    { name: 'file', maxCount: 1 },
+    { name: 'design', maxCount: 1 }
+  ]
+});
 
 function requireAuth(req, res, next) {
   if (!req.session.user) return res.redirect('/auth/login');
@@ -48,29 +56,24 @@ router.get('/upload', requireAuth, (req, res) => {
 });
 
 // Digital product upload
-router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
+router.post('/upload', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 }, { name: 'file', maxCount: 1 }]), async (req, res) => {
   const { title, description, price, type } = req.body;
   
   try {
-    if (!title || !type || !req.file) {
-      return res.render('admin/upload', { error: 'Missing required fields' });
+    if (!title || !type || !req.files.file || !req.files.cover) {
+      return res.render('admin/upload', { error: 'Missing required fields (cover image and product file required)' });
     }
     
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const price_cents = Math.round(parseFloat(price) * 100) || 0;
-    const fileUrl = `/uploads/${req.file.filename}`;
-    
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-    const fileExt = path.extname(req.file.originalname).toLowerCase();
-    const isImage = imageExtensions.includes(fileExt);
-    
-    const cover_url = isImage ? fileUrl : null;
+    const fileUrl = `/uploads/${req.files.file[0].filename}`;
+    const coverUrl = `/uploads/${req.files.cover[0].filename}`;
     
     const result = await pool.query(`
       INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, is_approved)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
       RETURNING id, slug
-    `, [req.session.user.id, type, title, slug, description, price_cents, fileUrl, cover_url]);
+    `, [req.session.user.id, type, title, slug, description, price_cents, fileUrl, coverUrl]);
     
     res.redirect(`/shop/product/${result.rows[0].slug}`);
   } catch (err) {
@@ -85,7 +88,7 @@ router.get('/upload-physical', requireAuth, (req, res) => {
 });
 
 // Physical product upload handler
-router.post('/upload-physical', requireAuth, upload.single('design'), async (req, res) => {
+router.post('/upload-physical', requireAuth, upload.fields([{ name: 'design', maxCount: 1 }]), async (req, res) => {
   const { title, description, price, category } = req.body;
   let variants = req.body.variants || [];
   
@@ -95,7 +98,7 @@ router.post('/upload-physical', requireAuth, upload.single('design'), async (req
   }
   
   try {
-    if (!title || !category || !req.file || variants.length === 0) {
+    if (!title || !category || !req.files.design || variants.length === 0) {
       return res.render('admin/upload-physical', { 
         error: 'Missing required fields or no variants selected' 
       });
@@ -103,7 +106,7 @@ router.post('/upload-physical', requireAuth, upload.single('design'), async (req
     
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const price_cents = Math.round(parseFloat(price) * 100) || 0;
-    const designUrl = `/uploads/${req.file.filename}`;
+    const designUrl = `/uploads/${req.files.design[0].filename}`;
     
     // Create product in our DB (marked as physical)
     const result = await pool.query(`
