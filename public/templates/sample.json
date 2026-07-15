@@ -1,0 +1,49 @@
+[
+  {
+    "title": "CodeVault",
+    "description": "Secure code repository and version control",
+    "price": "29.99",
+    "type": "app",
+    "file_url": "/uploads/codevault.zip"
+  },
+  {
+    "title": "DesignStudio",
+    "description": "Professional design and editing tools",
+    "price": "39.99",
+    "type": "app",
+    "file_url": "/uploads/design-studio.zip"
+  },
+  {
+    "title": "TaskMaster",
+    "description": "Advanced project and task management",
+    "price": "19.99",
+    "type": "app",
+    "file_url": "/uploads/taskmaster.zip"
+  },
+  {
+    "title": "Neon Dreams",
+    "description": "Synthwave ambient electronic music track",
+    "price": "0.99",
+    "type": "music"
+  },
+  {
+    "title": "Digital Rain",
+    "description": "Ambient atmospheric soundscape",
+    "price": "0.99",
+    "type": "music"
+  },
+  {
+    "title": "Neon City",
+    "description": "4K Cyberpunk Digital Art - Urban Scene",
+    "price": "9.99",
+    "type": "art",
+    "file_url": "/uploads/neon-city.png"
+  },
+  {
+    "title": "Digital Sunset",
+    "description": "8K Abstract Gradient Artwork",
+    "price": "12.99",
+    "type": "art",
+    "file_url": "/uploads/digital-sunset.png"
+  }
+]

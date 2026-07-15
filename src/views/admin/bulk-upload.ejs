@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bulk Upload - TheAppCabana Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #fff; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+    h1 { margin-bottom: 2rem; color: #00ff88; }
+    .tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid #333; }
+    .tab-btn { padding: 0.75rem 1.5rem; background: transparent; border: none; color: #999; cursor: pointer; border-bottom: 2px solid transparent; }
+    .tab-btn.active { color: #00ff88; border-bottom-color: #00ff88; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    .upload-box { border: 2px dashed #00ff88; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: 0.3s; }
+    .upload-box:hover { background: rgba(0, 255, 136, 0.05); }
+    .upload-box.dragover { background: rgba(0, 255, 136, 0.1); border-color: #00ffff; }
+    input[type="file"] { display: none; }
+    .form-group { margin-bottom: 1.5rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #00ff88; font-weight: 500; }
+    input, textarea, select { width: 100%; padding: 0.75rem; background: #1a1f3a; border: 1px solid #333; border-radius: 4px; color: #fff; font-family: inherit; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #00ff88; }
+    button { padding: 0.75rem 1.5rem; background: #00ff88; color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+    button:hover { background: #00ffff; }
+    .results { background: #1a1f3a; border-radius: 8px; padding: 1.5rem; margin-top: 2rem; display: none; }
+    .results.show { display: block; }
+    .result-item { padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 4px; }
+    .result-success { background: rgba(0, 255, 136, 0.1); color: #00ff88; }
+    .result-error { background: rgba(255, 0, 100, 0.1); color: #ff0064; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+    .stat-box { background: #1a1f3a; padding: 1rem; border-radius: 4px; text-align: center; }
+    .stat-num { font-size: 2rem; color: #00ff88; font-weight: bold; }
+    .stat-label { color: #999; font-size: 0.875rem; margin-top: 0.5rem; }
+    .template-link { color: #00ff88; text-decoration: none; }
+    .template-link:hover { text-decoration: underline; }
+    .info { background: rgba(0, 255, 136, 0.1); border-left: 3px solid #00ff88; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+  <div class="container">
+    <h1>🎯 Bulk Upload Products</h1>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="csv">CSV Upload</button>
+      <button class="tab-btn" data-tab="json">JSON Upload</button>
+      <button class="tab-btn" data-tab="files">Files + Metadata</button>
+    </div>
+
+    <!-- CSV TAB -->
+    <div class="tab-pane active" id="csv">
+      <div class="info">
+        <strong>CSV Format:</strong> title, description, price, type, file_url<br>
+        Types: app, music, art | Price in dollars
+      </div>
+      <div class="upload-box" id="csv-box">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">📄</div>
+        <p>Drag & drop CSV file or click to upload</p>
+        <small style="color: #999;">Max 500MB</small>
+      </div>
+      <input type="file" id="csv-file" accept=".csv">
+      <a href="/templates/sample.csv" class="template-link">📥 Download Sample CSV</a>
+    </div>
+
+    <!-- JSON TAB -->
+    <div class="tab-pane" id="json">
+      <div class="info">
+        <strong>JSON Format:</strong> Array of objects with title, description, price, type, file_url
+      </div>
+      <div class="upload-box" id="json-box">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">📋</div>
+        <p>Drag & drop JSON file or click to upload</p>
+        <small style="color: #999;">Max 500MB</small>
+      </div>
+      <input type="file" id="json-file" accept=".json">
+      <a href="/templates/sample.json" class="template-link">📥 Download Sample JSON</a>
+    </div>
+
+    <!-- FILES TAB -->
+    <div class="tab-pane" id="files">
+      <div class="info">
+        <strong>Upload Files:</strong> Select files + provide metadata as JSON array
+      </div>
+      <div class="upload-box" id="files-box">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">📦</div>
+        <p>Drag & drop files or click to upload (multiple)</p>
+        <small style="color: #999;">Max 100 files, 500MB each</small>
+      </div>
+      <input type="file" id="files-input" multiple>
+      <div class="form-group" style="margin-top: 1.5rem;">
+        <label>Product Metadata (JSON Array)</label>
+        <textarea id="files-metadata" rows="6" placeholder='[{"title":"App Name","description":"...","price":"9.99","type":"app"},...]'></textarea>
+      </div>
+      <button onclick="uploadFiles()">Upload Files</button>
+    </div>
+
+    <div class="results" id="results">
+      <h3>Upload Results</h3>
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-num" id="success-count">0</div>
+          <div class="stat-label">Successful</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="failed-count">0</div>
+          <div class="stat-label">Failed</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="total-count">0</div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+      <div id="errors-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes = document.querySelectorAll('.tab-pane');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        panes.forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // CSV drag & drop
+    const csvBox = document.getElementById('csv-box');
+    const csvFile = document.getElementById('csv-file');
+    csvBox.addEventListener('click', () => csvFile.click());
+    csvBox.addEventListener('dragover', e => { e.preventDefault(); csvBox.classList.add('dragover'); });
+    csvBox.addEventListener('dragleave', () => csvBox.classList.remove('dragover'));
+    csvBox.addEventListener('drop', e => {
+      e.preventDefault();
+      csvBox.classList.remove('dragover');
+      csvFile.files = e.dataTransfer.files;
+      uploadCSV();
+    });
+    csvFile.addEventListener('change', uploadCSV);
+
+    // JSON drag & drop
+    const jsonBox = document.getElementById('json-box');
+    const jsonFile = document.getElementById('json-file');
+    jsonBox.addEventListener('click', () => jsonFile.click());
+    jsonBox.addEventListener('dragover', e => { e.preventDefault(); jsonBox.classList.add('dragover'); });
+    jsonBox.addEventListener('dragleave', () => jsonBox.classList.remove('dragover'));
+    jsonBox.addEventListener('drop', e => {
+      e.preventDefault();
+      jsonBox.classList.remove('dragover');
+      jsonFile.files = e.dataTransfer.files;
+      uploadJSON();
+    });
+    jsonFile.addEventListener('change', uploadJSON);
+
+    // Files drag & drop
+    const filesBox = document.getElementById('files-box');
+    const filesInput = document.getElementById('files-input');
+    filesBox.addEventListener('click', () => filesInput.click());
+    filesBox.addEventListener('dragover', e => { e.preventDefault(); filesBox.classList.add('dragover'); });
+    filesBox.addEventListener('dragleave', () => filesBox.classList.remove('dragover'));
+    filesBox.addEventListener('drop', e => {
+      e.preventDefault();
+      filesBox.classList.remove('dragover');
+      filesInput.files = e.dataTransfer.files;
+    });
+
+    async function uploadCSV() {
+      if (!csvFile.files[0]) return;
+      const formData = new FormData();
+      formData.append('csv', csvFile.files[0]);
+      await postBulk('/admin/bulk/csv', formData);
+    }
+
+    async function uploadJSON() {
+      if (!jsonFile.files[0]) return;
+      const formData = new FormData();
+      formData.append('json', jsonFile.files[0]);
+      await postBulk('/admin/bulk/json', formData);
+    }
+
+    function uploadFiles() {
+      if (!filesInput.files.length) return alert('No files selected');
+      const formData = new FormData();
+      for (let file of filesInput.files) formData.append('files', file);
+      formData.append('products', document.getElementById('files-metadata').value);
+      postBulk('/admin/bulk/files', formData);
+    }
+
+    async function postBulk(url, formData) {
+      try {
+        const resp = await fetch(url, { method: 'POST', body: formData });
+        const data = await resp.json();
+        showResults(data);
+      } catch (e) {
+        alert('Upload failed: ' + e.message);
+      }
+    }
+
+    function showResults(data) {
+      const results = document.getElementById('results');
+      document.getElementById('success-count').textContent = data.success || 0;
+      document.getElementById('failed-count').textContent = data.failed || 0;
+      document.getElementById('total-count').textContent = (data.success || 0) + (data.failed || 0);
+      
+      const errorsList = document.getElementById('errors-list');
+      errorsList.innerHTML = '';
+      if (data.errors && data.errors.length > 0) {
+        data.errors.forEach(err => {
+          const div = document.createElement('div');
+          div.className = 'result-item result-error';
+          div.textContent = err;
+          errorsList.appendChild(div);
+        });
+      }
+      results.classList.add('show');
+    }
+  </script>
+</body>
+</html>

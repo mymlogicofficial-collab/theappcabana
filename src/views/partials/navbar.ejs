@@ -1,0 +1,41 @@
+<nav class="navbar" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: #0a0e27; border-bottom: 1px solid #333;">
+  <div style="display: flex; align-items: center; gap: 1rem;">
+    <a href="/" class="nav-btn" title="Home">
+      <span style="font-size: 1.5rem;">🏠</span>
+    </a>
+    <a href="javascript:history.back()" class="nav-btn" title="Back">
+      <span style="font-size: 1.5rem;">←</span>
+    </a>
+  </div>
+  
+  <div style="display: flex; align-items: center; gap: 1rem;">
+    <% if (user) { %>
+      <span style="color: #00ff88; font-weight: 500;"><%= user.display_name || user.username %></span>
+      <% if (user.is_admin) { %>
+        <a href="/admin/dashboard" class="nav-btn">⚙️ Admin</a>
+      <% } %>
+      <a href="/auth/logout" class="nav-btn">🚪 Logout</a>
+    <% } else { %>
+      <a href="/auth/login" class="nav-btn">🔑 Login</a>
+      <a href="/auth/register" class="nav-btn">✍️ Register</a>
+    <% } %>
+  </div>
+</nav>
+
+<style>
+  .nav-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #00ff88;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 0.9rem;
+  }
+  .nav-btn:hover {
+    border-color: #00ff88;
+    background: rgba(0, 255, 136, 0.1);
+  }
+</style>

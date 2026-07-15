@@ -44,11 +44,13 @@ app.use((req, res, next) => {
 const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
 const adminRoutes = require('./routes/admin');
+const bulkRoutes = require('./routes/bulk');
 const apiRoutes = require('./routes/api');
 
 app.use('/auth', authRoutes);
 app.use('/shop', shopRoutes);
 app.use('/admin', adminRoutes);
+app.use('/admin/bulk', bulkRoutes);
 app.use('/api', apiRoutes);
 
 // Homepage
