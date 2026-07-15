@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const { pool } = require('../db');
-const printful = require('../services/printful');
+const zazzle = require('../services/zazzle');
 
 const router = express.Router();
 
@@ -87,15 +87,15 @@ router.get('/upload-physical', requireAuth, (req, res) => {
 // Physical product upload handler
 router.post('/upload-physical', requireAuth, upload.single('design'), async (req, res) => {
   const { title, description, price, category } = req.body;
-  let variants = req.body.variants || [];
+  let colors = req.body.colors || [];
+  let sizes = req.body.sizes || [];
   
-  // Ensure variants is an array
-  if (typeof variants === 'string') {
-    variants = [variants];
-  }
+  // Ensure arrays
+  if (typeof colors === 'string') colors = [colors];
+  if (typeof sizes === 'string') sizes = [sizes];
   
   try {
-    if (!title || !category || !req.file || variants.length === 0) {
+    if (!title || !category || !req.file || colors.length === 0 || sizes.length === 0) {
       return res.render('admin/upload-physical', { 
         error: 'Missing required fields or no variants selected' 
       });
@@ -107,56 +107,42 @@ router.post('/upload-physical', requireAuth, upload.single('design'), async (req
     
     // Create product in our DB (marked as physical)
     const result = await pool.query(`
-      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, printful_category, is_approved)
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, zazzle_category, is_approved)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true)
       RETURNING id, slug
     `, [req.session.user.id, 'physical', title, slug, description, price_cents, designUrl, designUrl, category]);
     
     const productId = result.rows[0].id;
     
-    // Sync to Printful
+    // Sync to Zazzle
     try {
-      const CATEGORY_TO_PRINTFUL = {
-        't-shirts': 1,
-        'hoodies': 18,
-        'mugs': 10,
-        'hats': 33,
-        'phone-cases': 46,
-        'pillows': 48,
-        'blankets': 47,
-        'stickers': 36
-      };
-
-      const printfulProductId = CATEGORY_TO_PRINTFUL[category];
-      if (!printfulProductId) {
-        throw new Error('Unknown product category');
-      }
-
-      const printfulProduct = await printful.createPrintfulProduct({
+      const zazzleDesign = await zazzle.createZazzleDesign({
         external_id: `cabana-product-${productId}`,
         name: title,
         description: description || '',
         category: category,
-        variants: variants.map(v => parseInt(v))
+        design_url: designUrl,
+        colors: colors,
+        sizes: sizes
       });
 
-      // Save Printful sync info
+      // Save Zazzle sync info
       await pool.query(`
-        INSERT INTO physical_products (product_id, printful_product_id, printful_category, selected_variants, design_file_url, sync_status)
+        INSERT INTO physical_products (product_id, zazzle_design_id, zazzle_category, selected_variants, design_file_url, sync_status)
         VALUES ($1, $2, $3, $4, $5, 'synced')
-      `, [productId, printfulProduct.id, category, JSON.stringify(variants), designUrl]);
+      `, [productId, zazzleDesign.id, category, JSON.stringify({ colors, sizes }), designUrl]);
 
       res.redirect(`/shop/product/${result.rows[0].slug}`);
-    } catch (printfulErr) {
-      console.error('Printful sync error:', printfulErr.message);
+    } catch (zazzleErr) {
+      console.error('Zazzle sync error:', zazzleErr.message);
       // Still save the product but mark sync as failed
       await pool.query(`
-        INSERT INTO physical_products (product_id, printful_category, selected_variants, design_file_url, sync_status)
+        INSERT INTO physical_products (product_id, zazzle_category, selected_variants, design_file_url, sync_status)
         VALUES ($1, $2, $3, $4, 'failed')
-      `, [productId, category, JSON.stringify(variants), designUrl]);
+      `, [productId, category, JSON.stringify({ colors, sizes }), designUrl]);
 
       res.render('admin/upload-physical', { 
-        error: `Product created but failed to sync to Printful: ${printfulErr.message}` 
+        error: `Product created but failed to sync to Zazzle: ${zazzleErr.message}. Retry sync manually later.` 
       });
     }
   } catch (err) {

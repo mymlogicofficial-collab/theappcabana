@@ -45,13 +45,13 @@ const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
 const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
-const printfulRoutes = require('./routes/printful');
+const zazzleRoutes = require('./routes/zazzle');
 
 app.use('/auth', authRoutes);
 app.use('/shop', shopRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
-app.use('/api/printful', printfulRoutes);
+app.use('/api/zazzle', zazzleRoutes);
 
 // Homepage
 app.get('/', async (req, res) => {

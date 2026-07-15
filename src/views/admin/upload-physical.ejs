@@ -37,6 +37,8 @@
     .error { background: #2a1a1a; color: #ff6b6b; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
     .info { background: #1a2a3a; color: #aaa; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
     .variants-section { background: #1a1f3a; padding: 15px; border-radius: 4px; margin-top: 10px; }
+    .variant-column { display: inline-block; width: 48%; vertical-align: top; margin-right: 2%; }
+    .variant-column:last-child { margin-right: 0; }
     .variant-item { margin-bottom: 10px; }
     .variant-item input { margin-right: 8px; width: auto; display: inline-block; }
     .variant-item label { display: inline; margin-bottom: 0; margin-left: 5px; }
@@ -46,15 +48,15 @@
   <div class="container">
     <a href="/admin/upload" class="back-link">← Back to Digital Upload</a>
     
-    <h1>Upload Physical Product</h1>
-    <p style="color: #aaa; margin-bottom: 20px;">Design will be synced to Printful catalog automatically</p>
+    <h1>Upload Physical Product to Zazzle</h1>
+    <p style="color: #aaa; margin-bottom: 20px;">Design will be synced to Zazzle catalog automatically</p>
 
     <% if (error) { %>
       <div class="error"><%= error %></div>
     <% } %>
 
     <div class="info">
-      💡 Upload your design/mockup image. Select product type (shirt, mug, hat, etc.) and colors/sizes will auto-populate from Printful.
+      💡 Upload your design/mockup image. Select product type, colors, and sizes. We'll sync to Zazzle and handle fulfillment.
     </div>
 
     <form method="POST" action="/admin/upload-physical" enctype="multipart/form-data">
@@ -66,16 +68,16 @@
 
       <div class="form-group">
         <label for="category">Product Type *</label>
-        <select id="category" name="category" required onchange="loadVariants()">
+        <select id="category" name="category" required>
           <option value="">-- Select Product Type --</option>
           <option value="t-shirts">T-Shirts</option>
           <option value="hoodies">Hoodies</option>
-          <option value="mugs">Mugs</option>
-          <option value="hats">Hats</option>
+          <option value="mugs">Mugs (11oz)</option>
+          <option value="hats">Baseball Caps</option>
           <option value="phone-cases">Phone Cases</option>
           <option value="pillows">Throw Pillows</option>
           <option value="blankets">Throw Blankets</option>
-          <option value="stickers">Stickers</option>
+          <option value="stickers">Stickers (4x4)</option>
         </select>
       </div>
 
@@ -85,67 +87,92 @@
       </div>
 
       <div class="form-group">
-        <label for="price">Base Price ($) *</label>
+        <label for="price">Your Selling Price ($) *</label>
         <input type="number" id="price" name="price" step="0.01" min="0" required placeholder="10.00">
-        <small style="color: #aaa; margin-top: 5px; display: block;">Price you want to sell at (will add Printful cost on top)</small>
+        <small style="color: #aaa; margin-top: 5px; display: block;">Price you want to sell at. Zazzle cost added on top, you keep the margin.</small>
       </div>
 
       <div class="form-group">
         <label for="design">Design Image/Mockup *</label>
         <input type="file" id="design" name="design" accept="image/*" required>
-        <small style="color: #aaa; margin-top: 5px; display: block;">This will be the product cover image and synced to Printful</small>
+        <small style="color: #aaa; margin-top: 5px; display: block;">This will be the product cover image on Zazzle</small>
       </div>
 
-      <div id="variants-loading" style="display: none; color: #aaa;">
-        Loading available sizes/colors...
-      </div>
-
-      <div id="variants-section" class="form-group" style="display: none;">
-        <label>Available Variants (Auto-selected)</label>
-        <div id="variants-list" class="variants-section">
-          <!-- Populated by JavaScript from Printful API -->
+      <div class="form-group">
+        <label>Available Colors *</label>
+        <div class="variants-section">
+          <div class="variant-item">
+            <input type="checkbox" name="colors" value="black" id="color-black" checked>
+            <label for="color-black">Black</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="colors" value="white" id="color-white" checked>
+            <label for="color-white">White</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="colors" value="red" id="color-red">
+            <label for="color-red">Red</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="colors" value="blue" id="color-blue">
+            <label for="color-blue">Blue</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="colors" value="green" id="color-green">
+            <label for="color-green">Green</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="colors" value="gray" id="color-gray">
+            <label for="color-gray">Gray</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="colors" value="navy" id="color-navy">
+            <label for="color-navy">Navy</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="colors" value="purple" id="color-purple">
+            <label for="color-purple">Purple</label>
+          </div>
         </div>
       </div>
 
-      <button type="submit" class="btn">Add to Printful Catalog & Save</button>
+      <div class="form-group">
+        <label>Available Sizes *</label>
+        <div class="variants-section">
+          <div class="variant-item">
+            <input type="checkbox" name="sizes" value="xs" id="size-xs">
+            <label for="size-xs">XS</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="sizes" value="s" id="size-s" checked>
+            <label for="size-s">Small</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="sizes" value="m" id="size-m" checked>
+            <label for="size-m">Medium</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="sizes" value="l" id="size-l" checked>
+            <label for="size-l">Large</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="sizes" value="xl" id="size-xl">
+            <label for="size-xl">XL</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="sizes" value="xxl" id="size-xxl">
+            <label for="size-xxl">XXL</label>
+          </div>
+          <div class="variant-item">
+            <input type="checkbox" name="sizes" value="3xl" id="size-3xl">
+            <label for="size-3xl">3XL</label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn">Add to Zazzle Catalog & Save</button>
     </form>
   </div>
-
-  <script>
-    async function loadVariants() {
-      const category = document.getElementById('category').value;
-      if (!category) return;
-
-      document.getElementById('variants-loading').style.display = 'block';
-      document.getElementById('variants-section').style.display = 'none';
-
-      try {
-        const response = await fetch(`/api/printful/variants/${category}`);
-        const data = await response.json();
-
-        if (data.variants && data.variants.length > 0) {
-          const variantsList = document.getElementById('variants-list');
-          variantsList.innerHTML = '';
-
-          data.variants.forEach(variant => {
-            const div = document.createElement('div');
-            div.className = 'variant-item';
-            div.innerHTML = `
-              <input type="checkbox" name="variants" value="${variant.id}" id="variant-${variant.id}" checked>
-              <label for="variant-${variant.id}">${variant.name} - $${(variant.price / 100).toFixed(2)}</label>
-            `;
-            variantsList.appendChild(div);
-          });
-
-          document.getElementById('variants-section').style.display = 'block';
-          document.getElementById('variants-loading').style.display = 'none';
-        }
-      } catch (err) {
-        console.error('Error loading variants:', err);
-        document.getElementById('variants-loading').style.display = 'none';
-      }
-    }
-  </script>
 </body>
 </html>
 
