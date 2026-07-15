@@ -45,11 +45,13 @@ const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
 const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
+const printfulRoutes = require('./routes/printful');
 
 app.use('/auth', authRoutes);
 app.use('/shop', shopRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
+app.use('/api/printful', printfulRoutes);
 
 // Homepage
 app.get('/', async (req, res) => {
@@ -102,3 +104,4 @@ start().catch((err) => {
 });
 
 module.exports = app;
+
