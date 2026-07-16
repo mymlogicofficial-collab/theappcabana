@@ -212,5 +212,78 @@ router.post('/upload-physical', requireAuth, upload.fields([{ name: 'design', ma
   }
 });
 
+// Bulk upload UI
+router.get('/bulk/upload-ui', requireAuth, (req, res) => {
+  res.render('admin/bulk-upload', { error: null, success: null });
+});
+
+// Bulk upload - manual entry
+router.post('/bulk/upload-manual', requireAuth, upload.any(), async (req, res) => {
+  try {
+    const products = req.body.products || {};
+    const fileMap = {};
+    
+    // Build file map from uploads
+    if (req.files) {
+      req.files.forEach(file => {
+        const match = file.fieldname.match(/products\[(\d+)\]\[files\]/);
+        if (match) {
+          const idx = match[1];
+          if (!fileMap[idx]) fileMap[idx] = [];
+          fileMap[idx].push(`/uploads/${file.filename}`);
+        }
+      });
+    }
+
+    let uploadedCount = 0;
+    const errors = [];
+
+    // Process each product
+    for (const [idx, productData] of Object.entries(products)) {
+      try {
+        if (!productData.title || !productData.type) {
+          errors.push(`Product ${parseInt(idx) + 1}: Missing title or type`);
+          continue;
+        }
+
+        const slug = productData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const price_cents = Math.round(parseFloat(productData.price) * 100) || 0;
+        const files = fileMap[idx] || [];
+        
+        if (files.length === 0) {
+          errors.push(`Product ${parseInt(idx) + 1}: No files uploaded`);
+          continue;
+        }
+
+        const fileUrl = files[0];
+        const coverUrl = files[0]; // Use first file as cover
+
+        await pool.query(`
+          INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, is_approved)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+          RETURNING id
+        `, [req.session.user.id, productData.type, productData.title, slug, productData.description || '', price_cents, fileUrl, coverUrl]);
+
+        uploadedCount++;
+      } catch (err) {
+        console.error(err);
+        errors.push(`Product ${parseInt(idx) + 1}: ${err.message}`);
+      }
+    }
+
+    const message = uploadedCount > 0 
+      ? `✓ Successfully uploaded ${uploadedCount} product${uploadedCount !== 1 ? 's' : ''}`
+      : 'No products uploaded';
+
+    res.render('admin/bulk-upload', { 
+      success: uploadedCount > 0 ? message : null,
+      error: errors.length > 0 ? errors.join('; ') : null 
+    });
+  } catch (err) {
+    console.error(err);
+    res.render('admin/bulk-upload', { error: 'Something went wrong during bulk upload' });
+  }
+});
+
 module.exports = router;
 
