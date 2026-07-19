@@ -137,6 +137,18 @@ async function initDatabase() {
       }
     }
 
+    // Add amount_paid_cents to purchases table if needed
+    try {
+      await pool.query(`
+        ALTER TABLE purchases ADD COLUMN amount_paid_cents INTEGER NOT NULL DEFAULT 0
+      `);
+      console.log('Added amount_paid_cents column to purchases table');
+    } catch (err) {
+      if (!err.message.includes('already exists')) {
+        console.warn('Warning adding amount_paid_cents to purchases:', err.message);
+      }
+    }
+
     // Add printful_category to products table if needed
     try {
       await pool.query(`
