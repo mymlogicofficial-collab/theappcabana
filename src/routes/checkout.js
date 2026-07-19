@@ -174,5 +174,13 @@ router.get('/intent/:intentId', async (req, res) => {
   }
 });
 
+/**
+ * GET /checkout/success
+ * Page shown after successful payment
+ */
+router.get('/success', (req, res) => {
+  res.render('success', { message: 'Payment successful! Thank you for your purchase.' });
+});
+
 module.exports = router;
 
