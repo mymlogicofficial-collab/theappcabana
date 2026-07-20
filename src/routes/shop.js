@@ -4,7 +4,6 @@ const { pool } = require('../db');
 
 const router = express.Router();
 
-HEAD
 function requireAuth(req, res, next) {
   if (!req.session.user) return res.redirect('/auth/login');
   next();
@@ -62,48 +61,20 @@ router.get('/browse', async (req, res) => {
     res.status(500).render('error', { message: 'Something went wrong' });
   }
 });
->>>>>>> 801ef7421025811f5af2e4d09bc3f32db41a3ead
 
 // Checkout page - choose digital or merch
 router.get('/checkout/:product_id', requireAuth, async (req, res) => {
   try {
-<<<<<<< HEAD
     const product = await pool.query(
       'SELECT * FROM products WHERE id = $1',
       [req.params.product_id]
     );
-=======
-    const product = await pool.query(`
-      SELECT p.*, u.display_name as creator, u.username,
-        COALESCE((SELECT AVG(rating) FROM reviews WHERE reviews.product_id = p.id), 0) as avg_rating,
-        COALESCE((SELECT COUNT(*) FROM reviews WHERE reviews.product_id = p.id), 0) as review_count
-      FROM products p
-      LEFT JOIN users u ON p.user_id = u.id
-      WHERE p.slug = $1 AND p.is_approved = true
-    `, [req.params.slug]);
->>>>>>> 801ef7421025811f5af2e4d09bc3f32db41a3ead
     
     if (product.rows.length === 0) {
       return res.status(404).render('error', { message: 'Product not found' });
     }
-<<<<<<< HEAD
 
     res.render('shop/checkout', { 
-=======
-    
-    // Convert avg_rating to number
-    product.rows[0].avg_rating = parseFloat(product.rows[0].avg_rating) || 0;
-    product.rows[0].review_count = parseInt(product.rows[0].review_count) || 0;
-    
-    const reviews = await pool.query(`
-      SELECT r.*, u.display_name FROM reviews r
-      LEFT JOIN users u ON r.user_id = u.id
-      WHERE r.product_id = $1
-      ORDER BY r.created_at DESC
-    `, [product.rows[0].id]);
-    
-    res.render('shop/product', {
->>>>>>> 801ef7421025811f5af2e4d09bc3f32db41a3ead
       product: product.rows[0],
       stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY
     });
@@ -113,7 +84,6 @@ router.get('/checkout/:product_id', requireAuth, async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
 // Create Stripe session for digital download
 router.post('/checkout/digital/:product_id', requireAuth, async (req, res) => {
   try {
@@ -180,31 +150,12 @@ router.get('/checkout/merch/:product_id', requireAuth, async (req, res) => {
     const printfulUrl = `${process.env.PRINTFUL_STORE_URL || 'https://your-store.printful.com'}?product=${encodeURIComponent(p.title)}&price=${p.price_cents / 100}`;
     
     res.redirect(printfulUrl);
-=======
-/**
- * GET /shop/checkout/:slug
- * Render checkout page for a product
- */
-router.get('/checkout/:slug', async (req, res) => {
-  try {
-    const product = await pool.query(`
-      SELECT p.* FROM products p
-      WHERE p.slug = $1 AND p.is_approved = true
-    `, [req.params.slug]);
-    
-    if (product.rows.length === 0) {
-      return res.status(404).render('error', { message: 'Product not found' });
-    }
-    
-    res.render('shop/checkout', { product: product.rows[0] });
->>>>>>> 801ef7421025811f5af2e4d09bc3f32db41a3ead
   } catch (err) {
     console.error(err);
     res.status(500).render('error', { message: 'Something went wrong' });
   }
 });
 
-<<<<<<< HEAD
 // Handle successful payment
 router.get('/success', requireAuth, async (req, res) => {
   try {
@@ -270,7 +221,5 @@ router.get('/download/:product_id', requireAuth, async (req, res) => {
   }
 });
 
-=======
->>>>>>> 801ef7421025811f5af2e4d09bc3f32db41a3ead
 module.exports = router;
 
