@@ -69,28 +69,43 @@ router.post('/upload', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 
     
     let previewUrl = null;
 
-    // Generate 20-second preview for music files
+    // Generate 20-second preview from middle of song for music files
     if (type === 'music' && (req.files.file[0].mimetype.includes('audio') || req.files.file[0].originalname.match(/\.(mp3|wav|flac|m4a|aac)$/i))) {
       const previewFilename = `preview-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`;
       const previewPath = path.join(__dirname, '../public/uploads', previewFilename);
       previewUrl = `/uploads/${previewFilename}`;
 
       try {
+        // Get audio duration first, then extract from middle
         await new Promise((resolve, reject) => {
-          ffmpeg(filePath)
-            .setDuration(20)
-            .audioCodec('libmp3lame')
-            .audioBitrate('128k')
-            .output(previewPath)
-            .on('end', () => {
-              console.log(`Preview created: ${previewPath}`);
-              resolve();
-            })
-            .on('error', (err) => {
-              console.error('FFmpeg error:', err);
+          ffmpeg.ffprobe(filePath, (err, metadata) => {
+            if (err) {
+              console.error('FFprobe error:', err);
               reject(err);
-            })
-            .run();
+              return;
+            }
+
+            const duration = Math.floor(metadata.format.duration);
+            const startTime = Math.max(0, Math.floor(duration / 2) - 10); // Start 10 seconds before middle
+            
+            console.log(`Song duration: ${duration}s, extracting from ${startTime}s`);
+
+            ffmpeg(filePath)
+              .setStartTime(startTime)
+              .setDuration(20)
+              .audioCodec('libmp3lame')
+              .audioBitrate('128k')
+              .output(previewPath)
+              .on('end', () => {
+                console.log(`Preview created from middle of song: ${previewPath}`);
+                resolve();
+              })
+              .on('error', (err) => {
+                console.error('FFmpeg error:', err);
+                reject(err);
+              })
+              .run();
+          });
         });
       } catch (ffmpegErr) {
         console.error('Failed to create preview:', ffmpegErr.message);
