@@ -67,6 +67,99 @@ async function initDatabase() {
       )
     `);
 
+    // Physical product tracking (Printful integration)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS physical_products (
+        id SERIAL PRIMARY KEY,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        printful_product_id INTEGER,
+        printful_category VARCHAR(100),
+        selected_variants TEXT,
+        design_file_url TEXT,
+        sync_status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(product_id)
+      )
+    `);
+
+    // Order tracking for physical products
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS physical_orders (
+        id SERIAL PRIMARY KEY,
+        purchase_id INTEGER NOT NULL REFERENCES purchases(id) ON DELETE CASCADE,
+        printful_order_id INTEGER,
+        order_status VARCHAR(50) DEFAULT 'pending',
+        shipping_cost_cents INTEGER,
+        tracking_number VARCHAR(100),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Donations table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS donations (
+        id SERIAL PRIMARY KEY,
+        cause VARCHAR(50) NOT NULL,
+        amount_cents INTEGER NOT NULL,
+        donor_name VARCHAR(200),
+        donor_email VARCHAR(255),
+        is_anonymous BOOLEAN DEFAULT false,
+        stripe_payment_intent_id TEXT,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Migrations for existing tables
+    try {
+      await pool.query(`
+        ALTER TABLE reviews ADD COLUMN product_id INTEGER REFERENCES products(id) ON DELETE CASCADE
+      `);
+      console.log('Added product_id column to reviews table');
+    } catch (err) {
+      if (!err.message.includes('already exists')) {
+        console.warn('Warning adding product_id to reviews:', err.message);
+      }
+    }
+
+    // Ensure purchases table has product_id column
+    try {
+      await pool.query(`
+        ALTER TABLE purchases ADD COLUMN product_id INTEGER REFERENCES products(id) ON DELETE CASCADE
+      `);
+      console.log('Added product_id column to purchases table');
+    } catch (err) {
+      if (!err.message.includes('already exists')) {
+        console.warn('Warning adding product_id to purchases:', err.message);
+      }
+    }
+
+    // Add amount_paid_cents to purchases table if needed
+    try {
+      await pool.query(`
+        ALTER TABLE purchases ADD COLUMN amount_paid_cents INTEGER NOT NULL DEFAULT 0
+      `);
+      console.log('Added amount_paid_cents column to purchases table');
+    } catch (err) {
+      if (!err.message.includes('already exists')) {
+        console.warn('Warning adding amount_paid_cents to purchases:', err.message);
+      }
+    }
+
+    // Add printful_category to products table if needed
+    try {
+      await pool.query(`
+        ALTER TABLE products ADD COLUMN printful_category VARCHAR(100)
+      `);
+      console.log('Added printful_category to products table');
+    } catch (err) {
+      if (!err.message.includes('already exists')) {
+        console.warn('Warning adding printful_category:', err.message);
+      }
+    }
+
     console.log('Database initialized successfully');
   } catch (err) {
     console.error('Database init error:', err.message);
@@ -74,3 +167,4 @@ async function initDatabase() {
 }
 
 module.exports = { pool, initDatabase };
+

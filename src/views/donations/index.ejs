@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Our Causes - The App Cabana</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0e27;
+      color: #fff;
+      padding: 40px 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { text-align: center; font-size: 36px; margin-bottom: 15px; color: #667eea; }
+    .intro { text-align: center; color: #aaa; font-size: 16px; margin-bottom: 50px; max-width: 700px; margin-left: auto; margin-right: auto; }
+    
+    .causes { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 50px; }
+    @media (max-width: 900px) {
+      .causes { grid-template-columns: 1fr; }
+    }
+
+    .cause-card { background: #1a1f3a; padding: 40px; border-radius: 12px; border: 1px solid #2a3050; }
+    .cause-card h2 { font-size: 24px; margin-bottom: 15px; }
+    .cause-card.pencil { border-left: 4px solid #ff6b6b; }
+    .cause-card.cabana { border-left: 4px solid #667eea; }
+
+    .cause-description { color: #aaa; line-height: 1.6; margin-bottom: 25px; font-size: 15px; }
+    
+    .cause-stats { 
+      background: rgba(102, 126, 234, 0.1); 
+      padding: 15px; 
+      border-radius: 6px; 
+      margin-bottom: 25px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    .stat { text-align: center; }
+    .stat-label { font-size: 12px; color: #999; text-transform: uppercase; margin-bottom: 5px; }
+    .stat-value { font-size: 24px; font-weight: 600; color: #667eea; }
+
+    .donation-form { margin-top: 25px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+    input { 
+      width: 100%; 
+      padding: 10px; 
+      background: #0f1328; 
+      border: 1px solid #2a3050; 
+      color: #fff; 
+      border-radius: 4px; 
+      font-family: inherit;
+    }
+    input:focus { 
+      outline: none; 
+      border-color: #667eea; 
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .preset-amounts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+    @media (max-width: 600px) {
+      .preset-amounts { grid-template-columns: repeat(2, 1fr); }
+    }
+    .preset-btn { 
+      padding: 10px; 
+      background: #2a3050; 
+      border: 1px solid #2a3050; 
+      color: #fff; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .preset-btn:hover { background: #3a4050; border-color: #667eea; }
+    .preset-btn.active { background: #667eea; border-color: #667eea; }
+
+    #card-element { 
+      padding: 10px; 
+      background: #0f1328; 
+      border: 1px solid #2a3050; 
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+
+    .checkbox-group { display: flex; align-items: center; gap: 10px; margin: 15px 0; }
+    .checkbox-group input { width: auto; margin: 0; }
+    .checkbox-group label { margin: 0; }
+
+    .donate-btn { 
+      width: 100%; 
+      padding: 12px; 
+      background: #667eea; 
+      color: #fff; 
+      border: none; 
+      border-radius: 4px; 
+      font-size: 16px; 
+      font-weight: 600; 
+      cursor: pointer;
+    }
+    .donate-btn:hover:not(:disabled) { background: #5568d3; }
+    .donate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .donate-btn.pencil:hover:not(:disabled) { background: #ff5252; }
+    .donate-btn.cabana:hover:not(:disabled) { background: #5568d3; }
+
+    .error { color: #ff6b6b; font-size: 14px; margin-top: 8px; }
+    .success { color: #51cf66; font-size: 14px; margin-top: 8px; }
+
+    .loading { text-align: center; padding: 20px; }
+    .spinner { border: 3px solid #2a3050; border-top: 3px solid #667eea; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .impact { background: #2a3050; padding: 20px; border-radius: 6px; margin-top: 30px; font-size: 14px; color: #aaa; }
+    .impact strong { color: #667eea; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Support Our Causes</h1>
+    <p class="intro">Every donation makes a real difference. Choose a cause that matters to you and help us make an impact.</p>
+
+    <div class="causes">
+      <!-- #7 Pencil Cause -->
+      <div class="cause-card pencil">
+        <h2>🖍️ #7 Pencil</h2>
+        <p class="cause-description">
+          Supporting mental health awareness, research, and development. The #7 Pencil represents clarity, simplicity, and mental wellness. Your donation funds research initiatives and mental health resources.
+        </p>
+
+        <div class="cause-stats">
+          <div class="stat">
+            <div class="stat-label">Donors</div>
+            <div class="stat-value"><%= causeStats['pencil-7'].total_donors %></div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Raised</div>
+            <div class="stat-value">$<%= (causeStats['pencil-7'].total_raised / 100).toFixed(0) %></div>
+          </div>
+        </div>
+
+        <form class="donation-form" onsubmit="startDonation(event, 'pencil-7')">
+          <div class="form-group">
+            <label>Donation Amount</label>
+            <div class="preset-amounts">
+              <button type="button" class="preset-btn" onclick="setAmount(5, 'pencil-7')">$5</button>
+              <button type="button" class="preset-btn" onclick="setAmount(10, 'pencil-7')">$10</button>
+              <button type="button" class="preset-btn" onclick="setAmount(25, 'pencil-7')">$25</button>
+              <button type="button" class="preset-btn" onclick="setAmount(50, 'pencil-7')">$50</button>
+            </div>
+            <input type="number" id="amount-pencil-7" name="amount" placeholder="Enter custom amount ($)" step="0.01" min="1" max="10000" required>
+            <div id="card-errors-pencil-7" class="error"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Your Name (optional)</label>
+            <input type="text" id="donor_name-pencil-7" placeholder="Anonymous" />
+          </div>
+
+          <div class="form-group">
+            <label>Email (for receipt)</label>
+            <input type="email" id="donor_email-pencil-7" placeholder="your@email.com" />
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="is_anonymous-pencil-7" />
+            <label for="is_anonymous-pencil-7">Keep my donation anonymous</label>
+          </div>
+
+          <div id="card-element-pencil-7" style="margin-bottom: 15px;"></div>
+
+          <button type="submit" class="donate-btn pencil" id="donate-btn-pencil-7">Donate to #7 Pencil</button>
+          <div id="status-pencil-7"></div>
+        </form>
+      </div>
+
+      <!-- App Cabana Cause -->
+      <div class="cause-card cabana">
+        <h2>🍌 The App Cabana</h2>
+        <p class="cause-description">
+          Help us fund cool things for our community and customers! Donations support free sticker downloads, art competitions, creator grants, and building amazing features. Your support keeps The App Cabana thriving.
+        </p>
+
+        <div class="cause-stats">
+          <div class="stat">
+            <div class="stat-label">Donors</div>
+            <div class="stat-value"><%= causeStats['app-cabana'].total_donors %></div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Raised</div>
+            <div class="stat-value">$<%= (causeStats['app-cabana'].total_raised / 100).toFixed(0) %></div>
+          </div>
+        </div>
+
+        <form class="donation-form" onsubmit="startDonation(event, 'app-cabana')">
+          <div class="form-group">
+            <label>Donation Amount</label>
+            <div class="preset-amounts">
+              <button type="button" class="preset-btn" onclick="setAmount(5, 'app-cabana')">$5</button>
+              <button type="button" class="preset-btn" onclick="setAmount(10, 'app-cabana')">$10</button>
+              <button type="button" class="preset-btn" onclick="setAmount(25, 'app-cabana')">$25</button>
+              <button type="button" class="preset-btn" onclick="setAmount(50, 'app-cabana')">$50</button>
+            </div>
+            <input type="number" id="amount-app-cabana" name="amount" placeholder="Enter custom amount ($)" step="0.01" min="1" max="10000" required>
+            <div id="card-errors-app-cabana" class="error"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Your Name (optional)</label>
+            <input type="text" id="donor_name-app-cabana" placeholder="Anonymous" />
+          </div>
+
+          <div class="form-group">
+            <label>Email (for receipt)</label>
+            <input type="email" id="donor_email-app-cabana" placeholder="your@email.com" />
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="is_anonymous-app-cabana" />
+            <label for="is_anonymous-app-cabana">Keep my donation anonymous</label>
+          </div>
+
+          <div id="card-element-app-cabana" style="margin-bottom: 15px;"></div>
+
+          <button type="submit" class="donate-btn cabana" id="donate-btn-app-cabana">Donate to App Cabana</button>
+          <div id="status-app-cabana"></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="impact">
+      <strong>💝 Your Impact:</strong><br>
+      #7 Pencil donations support mental health research and awareness initiatives.<br>
+      App Cabana donations fund free content, creator grants, competitions, and feature development for our community.
+    </div>
+  </div>
+
+  <script>
+    const stripe = Stripe('<%= publicKey %>');
+    const elements = stripe.elements();
+
+    // Create card elements for both causes
+    const cardPencil = elements.create('card');
+    const cardCabana = elements.create('card');
+    
+    cardPencil.mount('#card-element-pencil-7');
+    cardCabana.mount('#card-element-app-cabana');
+
+    cardPencil.addEventListener('change', (event) => {
+      const displayError = document.getElementById('card-errors-pencil-7');
+      displayError.textContent = event.error ? event.error.message : '';
+    });
+
+    cardCabana.addEventListener('change', (event) => {
+      const displayError = document.getElementById('card-errors-app-cabana');
+      displayError.textContent = event.error ? event.error.message : '';
+    });
+
+    function setAmount(amount, cause) {
+      document.getElementById(`amount-${cause}`).value = amount;
+      document.querySelectorAll(`.preset-amounts button`).forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    async function startDonation(e, cause) {
+      e.preventDefault();
+
+      const amount = parseFloat(document.getElementById(`amount-${cause}`).value);
+      const donor_name = document.getElementById(`donor_name-${cause}`).value;
+      const donor_email = document.getElementById(`donor_email-${cause}`).value;
+      const is_anonymous = document.getElementById(`is_anonymous-${cause}`).checked;
+      const cardElement = cause === 'pencil-7' ? cardPencil : cardCabana;
+      const button = document.getElementById(`donate-btn-${cause}`);
+      const statusDiv = document.getElementById(`status-${cause}`);
+
+      if (!amount || amount < 1) {
+        document.getElementById(`card-errors-${cause}`).textContent = 'Please enter a valid amount';
+        return;
+      }
+
+      button.disabled = true;
+      button.innerHTML = '<div class="spinner"></div>';
+      statusDiv.innerHTML = '';
+
+      try {
+        // Step 1: Create payment intent
+        const intentRes = await fetch('/donations/create-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cause, amount })
+        });
+
+        const intentData = await intentRes.json();
+        if (intentData.error) {
+          throw new Error(intentData.error);
+        }
+
+        const clientSecret = intentData.clientSecret;
+        const intentId = clientSecret.split('_secret_')[0];
+
+        // Step 2: Confirm payment with card
+        const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: { card: cardElement }
+        });
+
+        if (error) {
+          document.getElementById(`card-errors-${cause}`).textContent = error.message;
+          button.disabled = false;
+          button.innerHTML = `Donate $${amount}`;
+          return;
+        }
+
+        if (paymentIntent.status === 'succeeded') {
+          // Step 3: Confirm donation on backend
+          const confirmRes = await fetch('/donations/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              intentId: intentId,
+              cause,
+              amount,
+              donor_name,
+              donor_email,
+              is_anonymous
+            })
+          });
+
+          const confirmData = await confirmRes.json();
+          if (confirmData.ok) {
+            statusDiv.innerHTML = `<div class="success">✓ Thank you for your donation of $${amount}! Redirecting...</div>`;
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else {
+            throw new Error(confirmData.error);
+          }
+        }
+      } catch (err) {
+        document.getElementById(`card-errors-${cause}`).textContent = err.message || 'Donation failed';
+        button.disabled = false;
+        button.innerHTML = `Donate $${amount.toFixed(2)}`;
+      }
+    }
+  </script>
+</body>
+</html>
+

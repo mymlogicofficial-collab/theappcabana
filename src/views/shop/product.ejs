@@ -4,24 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= product.title %> - The App Cabana</title>
+  <script src="https://js.stripe.com/v3/"></script>
   <style>
     body { font-family: sans-serif; background: #0a0e27; color: #fff; }
     .container { max-width: 1000px; margin: 0 auto; padding: 40px; }
     .product-header { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
-    .product-image { background: #1a1f3a; height: 400px; border-radius: 8px; }
+    .product-image { background: #1a1f3a; height: 400px; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .product-image img { max-width: 100%; max-height: 100%; object-fit: cover; }
+    .product-image.empty { color: #666; }
     .product-info h1 { font-size: 32px; margin-bottom: 10px; }
     .product-meta { color: #aaa; margin-bottom: 20px; }
     .price { font-size: 24px; color: #667eea; font-weight: bold; margin: 20px 0; }
     .description { line-height: 1.6; margin-bottom: 30px; }
     .btn { padding: 12px 30px; background: #667eea; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+<<<<<<< HEAD
     .btn:hover { background: #764ba2; }
     .preview-section { background: #1a1f3a; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #333; }
     .preview-section h3 { margin-bottom: 15px; color: #667eea; }
     audio { width: 100%; margin-bottom: 15px; }
+=======
+    .btn:hover { background: #5568d3; }
+    .btn:disabled { background: #444; cursor: not-allowed; }
+>>>>>>> 801ef7421025811f5af2e4d09bc3f32db41a3ead
     .reviews { margin-top: 40px; }
     .review { background: #1a1f3a; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; }
     .stars { color: #667eea; }
     textarea { width: 100%; padding: 10px; background: #1a1f3a; border: 1px solid #333; color: #fff; border-radius: 4px; margin: 10px 0; }
+    .select { padding: 8px; margin: 10px 0; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px; }
+    .free-download { background: #28a745; }
+    .free-download:hover { background: #218838; }
+    .error { color: #ff6b6b; background: #2a1a1a; padding: 10px; border-radius: 4px; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -29,13 +41,24 @@
     <a href="/shop/browse" style="color: #667eea;">← Back to Browse</a>
 
     <div class="product-header">
-      <div class="product-image"></div>
+      <div class="product-image <%= product.cover_url || product.file_path ? '' : 'empty' %>">
+        <% if (product.cover_url) { %>
+          <img src="<%= product.cover_url %>" alt="<%= product.title %>">
+        <% } else if (product.preview_url) { %>
+          <img src="<%= product.preview_url %>" alt="<%= product.title %>">
+        <% } else if (product.file_path && (product.file_path.match(/\.(jpg|jpeg|png|gif|webp)$/i))) { %>
+          <img src="<%= product.file_path %>" alt="<%= product.title %>">
+        <% } else { %>
+          No Image Available
+        <% } %>
+      </div>
       <div class="product-info">
         <h1><%= product.title %></h1>
         <div class="product-meta">
           By <strong><%= product.creator %></strong> | <%= product.download_count %> downloads
           <br><span class="stars">★ <%= product.avg_rating.toFixed(1) %> (<%= product.review_count %> reviews)</span>
         </div>
+<<<<<<< HEAD
         
         <% if (product.type === 'music' && product.preview_url) { %>
           <div class="preview-section">
@@ -48,8 +71,32 @@
         <% } %>
 
         <div class="price">$<%= (product.price_cents / 100).toFixed(2) %></div>
+=======
+        <div class="price">
+          <% if (product.price_cents === 0) { %>
+            FREE
+          <% } else { %>
+            $<%= (product.price_cents / 100).toFixed(2) %>
+          <% } %>
+        </div>
+>>>>>>> 801ef7421025811f5af2e4d09bc3f32db41a3ead
         <p class="description"><%= product.description %></p>
-        <button class="btn">Download Now</button>
+        
+        <div id="download-section">
+          <% if (product.price_cents === 0) { %>
+            <form action="/api/download/<%= product.id %>" method="POST">
+              <button type="submit" class="btn free-download">Download Now</button>
+            </form>
+          <% } else { %>
+            <% if (user) { %>
+              <form action="/api/purchase/<%= product.id %>" method="POST">
+                <button type="submit" class="btn" id="pay-btn">Pay & Download - $<%= (product.price_cents / 100).toFixed(2) %></button>
+              </form>
+            <% } else { %>
+              <p style="color: #aaa;"><a href="/auth/login" style="color: #667eea;">Login</a> to purchase</p>
+            <% } %>
+          <% } %>
+        </div>
       </div>
     </div>
 
@@ -59,12 +106,12 @@
       <% if (user) { %>
         <form method="POST" action="/api/review/<%= product.id %>" style="background: #1a1f3a; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
           <label>Rate this product:</label><br>
-          <select name="rating" style="padding: 8px; margin: 10px 0; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px;">
-            <option>5 - Excellent</option>
-            <option>4 - Good</option>
-            <option>3 - OK</option>
-            <option>2 - Poor</option>
-            <option>1 - Terrible</option>
+          <select name="rating" class="select">
+            <option value="5">5 - Excellent</option>
+            <option value="4">4 - Good</option>
+            <option value="3">3 - OK</option>
+            <option value="2">2 - Poor</option>
+            <option value="1">1 - Terrible</option>
           </select>
           <textarea name="comment" placeholder="Share your thoughts..." rows="4"></textarea>
           <button type="submit" class="btn">Post Review</button>
@@ -73,16 +120,21 @@
         <p style="color: #aaa; margin-bottom: 20px;"><a href="/auth/login" style="color: #667eea;">Login</a> to leave a review</p>
       <% } %>
 
-      <% reviews.forEach(r => { %>
-        <div class="review">
-          <div style="display: flex; justify-content: space-between;">
-            <strong><%= r.display_name %></strong>
-            <span class="stars">★ <%= r.rating %></span>
+      <% if (reviews && reviews.length > 0) { %>
+        <% reviews.forEach(r => { %>
+          <div class="review">
+            <div style="display: flex; justify-content: space-between;">
+              <strong><%= r.display_name %></strong>
+              <span class="stars">★ <%= r.rating %></span>
+            </div>
+            <p style="margin-top: 10px;"><%= r.comment %></p>
           </div>
-          <p style="margin-top: 10px;"><%= r.comment %></p>
-        </div>
-      <% }) %>
+        <% }) %>
+      <% } else { %>
+        <p style="color: #aaa;">No reviews yet. Be the first to review!</p>
+      <% } %>
     </div>
   </div>
 </body>
 </html>
+

@@ -37,6 +37,7 @@ app.use(session({
 
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
+  res.locals.publicKey = process.env.STRIPE_PUBLIC_KEY;
   next();
 });
 
@@ -46,12 +47,18 @@ const shopRoutes = require('./routes/shop');
 const adminRoutes = require('./routes/admin');
 const bulkRoutes = require('./routes/bulk');
 const apiRoutes = require('./routes/api');
+const printfulRoutes = require('./routes/printful');
+const checkoutRoutes = require('./routes/checkout');
+const donationsRoutes = require('./routes/donations');
 
 app.use('/auth', authRoutes);
 app.use('/shop', shopRoutes);
 app.use('/admin', adminRoutes);
 app.use('/admin/bulk', bulkRoutes);
 app.use('/api', apiRoutes);
+app.use('/api/printful', printfulRoutes);
+app.use('/checkout', checkoutRoutes);
+app.use('/donations', donationsRoutes);
 
 // Homepage
 app.get('/', async (req, res) => {
@@ -104,3 +111,4 @@ start().catch((err) => {
 });
 
 module.exports = app;
+
