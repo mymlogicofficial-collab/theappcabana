@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact - The App Cabana</title>
+  <style>
+    body { font-family: sans-serif; background: #0a0e27; color: #fff; }
+    .container { max-width: 800px; margin: 0 auto; padding: 40px; }
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    .contact-info { background: #1a1f3a; padding: 30px; border-radius: 8px; border: 1px solid #333; }
+    .contact-info h3 { color: #667eea; margin-bottom: 20px; }
+    .contact-item { margin-bottom: 20px; }
+    .contact-item strong { display: block; color: #667eea; margin-bottom: 5px; }
+    .contact-item a { color: #aaa; text-decoration: none; }
+    .contact-item a:hover { color: #fff; }
+    .form { background: #1a1f3a; padding: 30px; border-radius: 8px; border: 1px solid #333; }
+    .form h3 { color: #667eea; margin-bottom: 20px; }
+    label { display: block; margin-top: 15px; margin-bottom: 5px; }
+    input, textarea, select { width: 100%; padding: 10px; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px; }
+    button { width: 100%; margin-top: 20px; padding: 12px; background: #667eea; border: none; color: #fff; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #764ba2; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Contact Us</h1>
+
+    <div class="contact-grid">
+      <div class="contact-info">
+        <h3>MYM LOGIC LLC</h3>
+        
+        <div class="contact-item">
+          <strong>Phone</strong>
+          <a href="tel:5099002468">509-900-2468</a>
+        </div>
+
+        <div class="contact-item">
+          <strong>Email</strong>
+          <a href="mailto:MYMLOGIC.LLC@OUTLOOK.COM">MYMLOGIC.LLC@OUTLOOK.COM</a>
+        </div>
+
+        <div class="contact-item">
+          <strong>Location</strong>
+          <p>Kennewick, WA 99336, USA</p>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #333; margin: 20px 0;">
+
+        <h3 style="margin-top: 30px;">🎨 SE CUSTOMS</h3>
+        <p style="color: #aaa; margin-bottom: 15px;">Custom branding, graphics design, and creative consulting services.</p>
+        
+        <div class="contact-item">
+          <strong>Services</strong>
+          <ul style="list-style: none; padding: 0;">
+            <li>Brand Identity Design</li>
+            <li>Logo & Graphics</li>
+            <li>Creative Consulting</li>
+            <li>Brand Strategy</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="form">
+        <h3>Send us a Message</h3>
+        <form method="POST" action="/contact">
+          <label>Name *</label>
+          <input type="text" name="name" required>
+
+          <label>Email *</label>
+          <input type="email" name="email" required>
+
+          <label>Subject *</label>
+          <input type="text" name="subject" required>
+
+          <label>Type</label>
+          <select name="type">
+            <option>General Inquiry</option>
+            <option>SE CUSTOMS Services</option>
+            <option>Charity Donation</option>
+            <option>Partnership</option>
+          </select>
+
+          <label>Message *</label>
+          <textarea name="message" rows="5" required></textarea>
+
+          <button type="submit">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

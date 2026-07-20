@@ -37,7 +37,6 @@ app.use(session({
 
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
-  res.locals.publicKey = process.env.STRIPE_PUBLIC_KEY;
   next();
 });
 
@@ -45,20 +44,12 @@ app.use((req, res, next) => {
 const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
 const adminRoutes = require('./routes/admin');
-const bulkRoutes = require('./routes/bulk');
 const apiRoutes = require('./routes/api');
-const printfulRoutes = require('./routes/printful');
-const checkoutRoutes = require('./routes/checkout');
-const donationsRoutes = require('./routes/donations');
 
 app.use('/auth', authRoutes);
 app.use('/shop', shopRoutes);
 app.use('/admin', adminRoutes);
-app.use('/admin/bulk', bulkRoutes);
 app.use('/api', apiRoutes);
-app.use('/api/printful', printfulRoutes);
-app.use('/checkout', checkoutRoutes);
-app.use('/donations', donationsRoutes);
 
 // Homepage
 app.get('/', async (req, res) => {
@@ -87,28 +78,44 @@ app.get('/', async (req, res) => {
   }
 });
 
+// Contact page
+app.get('/contact', (req, res) => {
+  res.render('contact');
+});
+
+app.post('/contact', async (req, res) => {
+  const { name, email, subject, type, message } = req.body;
+  try {
+    console.log('Contact form submission:', { name, email, subject, type, message });
+    // In production, send email notification here
+    res.render('contact', { success: 'Message sent! We\'ll be in touch soon.' });
+  } catch (err) {
+    console.error(err);
+    res.render('contact', { error: 'Failed to send message' });
+  }
+});
+
+// Submit page
+app.get('/submit', (req, res) => {
+  res.render('submit');
+});
+
+// Charity page
+app.get('/charity', (req, res) => {
+  res.render('charity');
+});
+
 app.use((req, res) => {
   res.status(404).render('error', { message: 'Page not found' });
 });
 
 async function start() {
-  try {
-    await initDatabase();
-    console.log('Database ready, starting server...');
-  } catch (err) {
-    console.error('Failed to initialize database, aborting startup:', err);
-    process.exit(1);
-  }
-
+  await initDatabase();
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`[TheAppCabana] Running on http://0.0.0.0:${PORT}`);
   });
 }
 
-start().catch((err) => {
-  console.error('Fatal error during startup:', err);
-  process.exit(1);
-});
+start().catch(console.error);
 
 module.exports = app;
-

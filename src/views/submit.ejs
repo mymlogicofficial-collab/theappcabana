@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Your Work - The App Cabana</title>
+  <style>
+    body { font-family: sans-serif; background: #0a0e27; color: #fff; }
+    .container { max-width: 900px; margin: 0 auto; padding: 40px; }
+    .submit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
+    .submit-option { background: #1a1f3a; padding: 30px; border-radius: 8px; border: 1px solid #333; text-align: center; cursor: pointer; transition: all 0.3s; }
+    .submit-option:hover { border-color: #667eea; transform: translateY(-5px); }
+    .submit-option h3 { color: #667eea; margin-bottom: 10px; font-size: 24px; }
+    .submit-option p { color: #aaa; font-size: 14px; }
+    .submit-option a { display: inline-block; margin-top: 15px; padding: 10px 20px; background: #667eea; color: #fff; text-decoration: none; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Share Your Creations</h1>
+    <p style="color: #aaa; margin-bottom: 30px;">Join thousands of creators selling their work on The App Cabana.</p>
+
+    <div class="submit-grid">
+      <div class="submit-option">
+        <div style="font-size: 48px; margin-bottom: 10px;">💻</div>
+        <h3>Submit App</h3>
+        <p>Share your software, tools, and applications with the world.</p>
+        <a href="<%= user ? '/admin/upload?type=app' : '/auth/login' %>">Submit App</a>
+      </div>
+
+      <div class="submit-option">
+        <div style="font-size: 48px; margin-bottom: 10px;">🎨</div>
+        <h3>Submit Original Art</h3>
+        <p>Sell your digital art, illustrations, and creative designs.</p>
+        <a href="<%= user ? '/admin/upload?type=art' : '/auth/login' %>">Submit Art</a>
+      </div>
+
+      <div class="submit-option">
+        <div style="font-size: 48px; margin-bottom: 10px;">🎵</div>
+        <h3>Submit Music</h3>
+        <p>Upload your original music, tracks, and audio productions.</p>
+        <a href="<%= user ? '/admin/upload?type=music' : '/auth/login' %>">Submit Music</a>
+      </div>
+    </div>
+
+    <div style="background: #1a1f3a; padding: 30px; border-radius: 8px; border: 1px solid #333; margin-top: 40px;">
+      <h2 style="color: #667eea; margin-bottom: 20px;">Creator Guidelines</h2>
+      <ul style="color: #aaa; line-height: 1.8;">
+        <li>✓ Original work only — respect all copyrights</li>
+        <li>✓ Clear descriptions and accurate pricing</li>
+        <li>✓ High-quality files and professional presentation</li>
+        <li>✓ Responsive to customer support inquiries</li>
+        <li>✓ Comply with platform policies and terms</li>
+      </ul>
+    </div>
+
+    <div style="background: #667eea; padding: 30px; border-radius: 8px; margin-top: 30px; text-align: center;">
+      <h3>Questions?</h3>
+      <p style="margin-bottom: 15px;">Need help? Contact our support team.</p>
+      <a href="/contact" style="display: inline-block; padding: 10px 20px; background: #0a0e27; color: #667eea; text-decoration: none; border-radius: 4px; font-weight: bold;">Get Help</a>
+    </div>
+  </div>
+</body>
+</html>
