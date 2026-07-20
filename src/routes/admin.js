@@ -63,43 +63,62 @@ router.post('/upload', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 
     
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const price_cents = Math.round(parseFloat(price) * 100) || 0;
-<<<<<<< HEAD
-    const filePath = `/uploads/${req.file.filename}`;
+    const fileUrl = `/uploads/${req.files.file[0].filename}`;
+    const coverUrl = `/uploads/${req.files.cover[0].filename}`;
+    const filePath = path.join(__dirname, '../public/uploads', req.files.file[0].filename);
+    
     let previewUrl = null;
 
-    // Generate 20-second preview for music files
-    if (type === 'music' && (req.file.mimetype.includes('audio') || req.file.originalname.endsWith('.mp3'))) {
-      const previewFilename = `preview-${Date.now()}.mp3`;
+    // Generate 20-second preview from middle of song for music files
+    if (type === 'music' && (req.files.file[0].mimetype.includes('audio') || req.files.file[0].originalname.match(/\.(mp3|wav|flac|m4a|aac)$/i))) {
+      const previewFilename = `preview-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`;
       const previewPath = path.join(__dirname, '../public/uploads', previewFilename);
       previewUrl = `/uploads/${previewFilename}`;
 
-      await new Promise((resolve, reject) => {
-        ffmpeg(req.file.path)
-          .setDuration(20)
-          .audioCodec('libmp3lame')
-          .audioBitrate('128k')
-          .output(previewPath)
-          .on('end', resolve)
-          .on('error', reject)
-          .run();
-      });
-    }
+      try {
+        // Get audio duration first, then extract from middle
+        await new Promise((resolve, reject) => {
+          ffmpeg.ffprobe(filePath, (err, metadata) => {
+            if (err) {
+              console.error('FFprobe error:', err);
+              reject(err);
+              return;
+            }
 
-    const result = await pool.query(`
-      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, preview_url, is_approved)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
-      RETURNING id, slug
-    `, [req.session.user.id, type, title, slug, description, price_cents, filePath, previewUrl]);
-=======
-    const fileUrl = `/uploads/${req.files.file[0].filename}`;
-    const coverUrl = `/uploads/${req.files.cover[0].filename}`;
+            const duration = Math.floor(metadata.format.duration);
+            const startTime = Math.max(0, Math.floor(duration / 2) - 10); // Start 10 seconds before middle
+            
+            console.log(`Song duration: ${duration}s, extracting from ${startTime}s`);
+
+            ffmpeg(filePath)
+              .setStartTime(startTime)
+              .setDuration(20)
+              .audioCodec('libmp3lame')
+              .audioBitrate('128k')
+              .output(previewPath)
+              .on('end', () => {
+                console.log(`Preview created from middle of song: ${previewPath}`);
+                resolve();
+              })
+              .on('error', (err) => {
+                console.error('FFmpeg error:', err);
+                reject(err);
+              })
+              .run();
+          });
+        });
+      } catch (ffmpegErr) {
+        console.error('Failed to create preview:', ffmpegErr.message);
+        // Don't fail the upload if preview fails, just skip it
+        previewUrl = null;
+      }
+    }
     
     const result = await pool.query(`
-      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, is_approved)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, preview_url, is_approved)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true)
       RETURNING id, slug
-    `, [req.session.user.id, type, title, slug, description, price_cents, fileUrl, coverUrl]);
->>>>>>> 801ef7421025811f5af2e4d09bc3f32db41a3ead
+    `, [req.session.user.id, type, title, slug, description, price_cents, fileUrl, coverUrl, previewUrl]);
     
     res.redirect(`/shop/product/${result.rows[0].slug}`);
   } catch (err) {
