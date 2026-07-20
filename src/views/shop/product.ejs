@@ -17,15 +17,11 @@
     .price { font-size: 24px; color: #667eea; font-weight: bold; margin: 20px 0; }
     .description { line-height: 1.6; margin-bottom: 30px; }
     .btn { padding: 12px 30px; background: #667eea; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
-<<<<<<< HEAD
     .btn:hover { background: #764ba2; }
+    .btn:disabled { background: #444; cursor: not-allowed; }
     .preview-section { background: #1a1f3a; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #333; }
     .preview-section h3 { margin-bottom: 15px; color: #667eea; }
     audio { width: 100%; margin-bottom: 15px; }
-=======
-    .btn:hover { background: #5568d3; }
-    .btn:disabled { background: #444; cursor: not-allowed; }
->>>>>>> 801ef7421025811f5af2e4d09bc3f32db41a3ead
     .reviews { margin-top: 40px; }
     .review { background: #1a1f3a; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; }
     .stars { color: #667eea; }
@@ -37,6 +33,7 @@
   </style>
 </head>
 <body>
+  <%- include('partials/navbar') %>
   <div class="container">
     <a href="/shop/browse" style="color: #667eea;">← Back to Browse</a>
 
@@ -58,7 +55,6 @@
           By <strong><%= product.creator %></strong> | <%= product.download_count %> downloads
           <br><span class="stars">★ <%= product.avg_rating.toFixed(1) %> (<%= product.review_count %> reviews)</span>
         </div>
-<<<<<<< HEAD
         
         <% if (product.type === 'music' && product.preview_url) { %>
           <div class="preview-section">
@@ -70,8 +66,6 @@
           </div>
         <% } %>
 
-        <div class="price">$<%= (product.price_cents / 100).toFixed(2) %></div>
-=======
         <div class="price">
           <% if (product.price_cents === 0) { %>
             FREE
@@ -79,19 +73,16 @@
             $<%= (product.price_cents / 100).toFixed(2) %>
           <% } %>
         </div>
->>>>>>> 801ef7421025811f5af2e4d09bc3f32db41a3ead
         <p class="description"><%= product.description %></p>
         
         <div id="download-section">
           <% if (product.price_cents === 0) { %>
-            <form action="/api/download/<%= product.id %>" method="POST">
+            <form action="/shop/download/<%= product.id %>" method="GET">
               <button type="submit" class="btn free-download">Download Now</button>
             </form>
           <% } else { %>
-            <% if (user) { %>
-              <form action="/api/purchase/<%= product.id %>" method="POST">
-                <button type="submit" class="btn" id="pay-btn">Pay & Download - $<%= (product.price_cents / 100).toFixed(2) %></button>
-              </form>
+            <% if (typeof sessionStorage !== 'undefined' || true) { %>
+              <button type="button" class="btn" id="pay-btn" onclick="checkout('<%= product.id %>')">Pay & Download - $<%= (product.price_cents / 100).toFixed(2) %></button>
             <% } else { %>
               <p style="color: #aaa;"><a href="/auth/login" style="color: #667eea;">Login</a> to purchase</p>
             <% } %>
@@ -103,23 +94,6 @@
     <div class="reviews">
       <h2>Reviews</h2>
       
-      <% if (user) { %>
-        <form method="POST" action="/api/review/<%= product.id %>" style="background: #1a1f3a; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-          <label>Rate this product:</label><br>
-          <select name="rating" class="select">
-            <option value="5">5 - Excellent</option>
-            <option value="4">4 - Good</option>
-            <option value="3">3 - OK</option>
-            <option value="2">2 - Poor</option>
-            <option value="1">1 - Terrible</option>
-          </select>
-          <textarea name="comment" placeholder="Share your thoughts..." rows="4"></textarea>
-          <button type="submit" class="btn">Post Review</button>
-        </form>
-      <% } else { %>
-        <p style="color: #aaa; margin-bottom: 20px;"><a href="/auth/login" style="color: #667eea;">Login</a> to leave a review</p>
-      <% } %>
-
       <% if (reviews && reviews.length > 0) { %>
         <% reviews.forEach(r => { %>
           <div class="review">
@@ -135,6 +109,36 @@
       <% } %>
     </div>
   </div>
+
+  <script>
+    async function checkout(productId) {
+      try {
+        const response = await fetch(`/shop/checkout/digital/${productId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          alert('Error: ' + (error.error || 'Failed to create checkout session'));
+          return;
+        }
+
+        const data = await response.json();
+        const stripe = Stripe('<%= stripePublishableKey %>');
+        
+        // Redirect to Stripe checkout
+        const result = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+        
+        if (result.error) {
+          alert('Error: ' + result.error.message);
+        }
+      } catch (err) {
+        console.error('Checkout error:', err);
+        alert('Error: ' + err.message);
+      }
+    }
+  </script>
 </body>
 </html>
 
