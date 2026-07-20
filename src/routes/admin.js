@@ -65,12 +65,45 @@ router.post('/upload', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 
     const price_cents = Math.round(parseFloat(price) * 100) || 0;
     const fileUrl = `/uploads/${req.files.file[0].filename}`;
     const coverUrl = `/uploads/${req.files.cover[0].filename}`;
+    const filePath = path.join(__dirname, '../public/uploads', req.files.file[0].filename);
+    
+    let previewUrl = null;
+
+    // Generate 20-second preview for music files
+    if (type === 'music' && (req.files.file[0].mimetype.includes('audio') || req.files.file[0].originalname.match(/\.(mp3|wav|flac|m4a|aac)$/i))) {
+      const previewFilename = `preview-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`;
+      const previewPath = path.join(__dirname, '../public/uploads', previewFilename);
+      previewUrl = `/uploads/${previewFilename}`;
+
+      try {
+        await new Promise((resolve, reject) => {
+          ffmpeg(filePath)
+            .setDuration(20)
+            .audioCodec('libmp3lame')
+            .audioBitrate('128k')
+            .output(previewPath)
+            .on('end', () => {
+              console.log(`Preview created: ${previewPath}`);
+              resolve();
+            })
+            .on('error', (err) => {
+              console.error('FFmpeg error:', err);
+              reject(err);
+            })
+            .run();
+        });
+      } catch (ffmpegErr) {
+        console.error('Failed to create preview:', ffmpegErr.message);
+        // Don't fail the upload if preview fails, just skip it
+        previewUrl = null;
+      }
+    }
     
     const result = await pool.query(`
-      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, is_approved)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, preview_url, is_approved)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true)
       RETURNING id, slug
-    `, [req.session.user.id, type, title, slug, description, price_cents, fileUrl, coverUrl]);
+    `, [req.session.user.id, type, title, slug, description, price_cents, fileUrl, coverUrl, previewUrl]);
     
     res.redirect(`/shop/product/${result.rows[0].slug}`);
   } catch (err) {
