@@ -7,48 +7,63 @@
 </head>
 <body>
 
-  <!-- Your song preview elements -->
-  <audio id="songAudio" src="YOUR_SONG_FILE_URL.mp3" preload="metadata"></audio>
-  <button id="previewBtn">Preview Song</button>
+  <!-- Replace this section with your actual EJS product loop -->
+  <!-- Example of how your store items should look: -->
+  <div class="product">
+    <h3>Product 1</h3>
+    <button class="previewBtn" data-song="YOUR_FIRST_SONG_URL.mp3">Preview Song</button>
+  </div>
 
-  <!-- The script to make the button work -->
+  <div class="product">
+    <h3>Product 2</h3>
+    <button class="previewBtn" data-song="YOUR_SECOND_SONG_URL.mp3">Preview Song</button>
+  </div>
+  <!-- End of store items -->
+
+
+  <!-- ONE Global Audio Player placed at the bottom -->
+  <audio id="mainAudioPlayer" preload="none"></audio>
+
+  <!-- The script to handle all store buttons -->
   <script>
-    const audio = document.getElementById('songAudio');
-    const previewBtn = document.getElementById('previewBtn');
+    const player = document.getElementById('mainAudioPlayer');
     let previewTimer;
+    let activeBtn = null;
 
-    previewBtn.addEventListener('click', () => {
-      if (!audio.paused) {
-        audio.pause();
-        clearTimeout(previewTimer);
-        previewBtn.innerText = "Preview Song";
-        return;
-      }
+    document.querySelectorAll('.previewBtn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const songUrl = this.getAttribute('data-song');
 
-      if (audio.readyState >= 1) { 
-        playMidPreview();
-      } else {
-        audio.addEventListener('loadedmetadata', playMidPreview, { once: true });
-      }
+        if (activeBtn === this && !player.paused) {
+          player.pause();
+          clearTimeout(previewTimer);
+          this.innerText = "Preview Song";
+          activeBtn = null;
+          return;
+        }
+
+        if (activeBtn) activeBtn.innerText = "Preview Song";
+        
+        player.src = songUrl;
+        activeBtn = this;
+        this.innerText = "Loading...";
+
+        player.onloadedmetadata = () => {
+          const duration = player.duration;
+          player.currentTime = duration > 20 ? (duration / 2) - 10 : 0;
+          
+          player.play();
+          this.innerText = "Stop Preview";
+          
+          clearTimeout(previewTimer);
+          previewTimer = setTimeout(() => {
+            player.pause();
+            this.innerText = "Preview Song";
+            activeBtn = null;
+          }, 20000);
+        };
+      });
     });
-
-    function playMidPreview() {
-      const duration = audio.duration;
-      
-      if (duration > 20) {
-        audio.currentTime = (duration / 2) - 10;
-      } else {
-        audio.currentTime = 0;
-      }
-
-      audio.play();
-      previewBtn.innerText = "Stop Preview";
-
-      previewTimer = setTimeout(() => {
-        audio.pause();
-        previewBtn.innerText = "Preview Song";
-      }, 20000); 
-    }
   </script>
 </body>
 </html>
