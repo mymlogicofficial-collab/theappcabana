@@ -4,12 +4,12 @@ const { pool } = require('../db');
 
 const router = express.Router();
 
-<<<<<<< HEAD
+HEAD
 function requireAuth(req, res, next) {
   if (!req.session.user) return res.redirect('/auth/login');
   next();
 }
-=======
+
 router.get('/browse', async (req, res) => {
   try {
     const { type, search, sort } = req.query;
