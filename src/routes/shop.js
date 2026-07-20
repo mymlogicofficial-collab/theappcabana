@@ -9,6 +9,7 @@ function requireAuth(req, res, next) {
   next();
 }
 
+// Browse all products
 router.get('/browse', async (req, res) => {
   try {
     const { type, search, sort } = req.query;
@@ -55,6 +56,44 @@ router.get('/browse', async (req, res) => {
     res.render('shop/browse', {
       products: result.rows,
       filters: { type, search, sort }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('error', { message: 'Something went wrong' });
+  }
+});
+
+// View product details by slug
+router.get('/product/:slug', async (req, res) => {
+  try {
+    const product = await pool.query(`
+      SELECT p.*, u.display_name as creator, u.username,
+        COALESCE((SELECT AVG(rating) FROM reviews WHERE reviews.product_id = p.id), 0) as avg_rating,
+        COALESCE((SELECT COUNT(*) FROM reviews WHERE reviews.product_id = p.id), 0) as review_count
+      FROM products p
+      LEFT JOIN users u ON p.user_id = u.id
+      WHERE p.slug = $1 AND p.is_approved = true
+    `, [req.params.slug]);
+    
+    if (product.rows.length === 0) {
+      return res.status(404).render('error', { message: 'Product not found' });
+    }
+    
+    // Convert avg_rating to number
+    product.rows[0].avg_rating = parseFloat(product.rows[0].avg_rating) || 0;
+    product.rows[0].review_count = parseInt(product.rows[0].review_count) || 0;
+    
+    const reviews = await pool.query(`
+      SELECT r.*, u.display_name FROM reviews r
+      LEFT JOIN users u ON r.user_id = u.id
+      WHERE r.product_id = $1
+      ORDER BY r.created_at DESC
+    `, [product.rows[0].id]);
+    
+    res.render('shop/product', {
+      product: product.rows[0],
+      reviews: reviews.rows,
+      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY
     });
   } catch (err) {
     console.error(err);
@@ -146,7 +185,6 @@ router.get('/checkout/merch/:product_id', requireAuth, async (req, res) => {
     const p = product.rows[0];
 
     // Redirect to your Printful store with product info
-    // You'll need to set up Printful integration separately
     const printfulUrl = `${process.env.PRINTFUL_STORE_URL || 'https://your-store.printful.com'}?product=${encodeURIComponent(p.title)}&price=${p.price_cents / 100}`;
     
     res.redirect(printfulUrl);
