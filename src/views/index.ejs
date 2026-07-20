@@ -65,6 +65,8 @@
     <p>Discover amazing apps, music, and art from independent creators</p>
     <a href="/shop/browse" class="btn">Explore Now</a>
   </div>
+<audio id="songAudio" src="YOUR_SONG_FILE_URL.mp3" preload="metadata"></audio>
+<button id="previewBtn">Preview Song</button>
 
   <div class="stats">
     <div class="stat">
@@ -95,6 +97,44 @@
       </div>
     <% }) %>
   </div>
+<script>
+  const audio = document.getElementById('songAudio');
+  const previewBtn = document.getElementById('previewBtn');
+  let previewTimer;
+
+  previewBtn.addEventListener('click', () => {
+    if (!audio.paused) {
+      audio.pause();
+      clearTimeout(previewTimer);
+      previewBtn.innerText = "Preview Song";
+      return;
+    }
+
+    if (audio.readyState >= 1) { 
+      playMidPreview();
+    } else {
+      audio.addEventListener('loadedmetadata', playMidPreview, { once: true });
+    }
+  });
+
+  function playMidPreview() {
+    const duration = audio.duration;
+    
+    if (duration > 20) {
+      audio.currentTime = (duration / 2) - 10;
+    } else {
+      audio.currentTime = 0;
+    }
+
+    audio.play();
+    previewBtn.innerText = "Stop Preview";
+
+    previewTimer = setTimeout(() => {
+      audio.pause();
+      previewBtn.innerText = "Preview Song";
+    }, 20000); 
+  }
+</script>
 
   <footer>
     <div class="footer-grid">
