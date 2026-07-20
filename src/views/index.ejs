@@ -4,177 +4,51 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The App Cabana - Apps, Music, Art</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #fff; }
-    header { background: #1a1f3a; padding: 20px 40px; border-bottom: 1px solid #333; }
-    header h1 { font-size: 28px; margin-bottom: 10px; }
-    nav { display: flex; gap: 30px; flex-wrap: wrap; }
-    nav a { color: #ccc; text-decoration: none; transition: color 0.3s; }
-    nav a:hover { color: #fff; }
-    .hero { padding: 80px 40px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .hero h2 { font-size: 48px; margin-bottom: 20px; }
-    .hero p { font-size: 18px; margin-bottom: 30px; color: rgba(255,255,255,0.9); }
-    .btn { display: inline-block; padding: 12px 30px; background: #667eea; color: #fff; text-decoration: none; border-radius: 8px; cursor: pointer; border: none; font-size: 16px; margin: 5px; }
-    .btn:hover { background: #764ba2; }
-    .stats { display: flex; justify-content: center; gap: 60px; padding: 40px; flex-wrap: wrap; }
-    .stat { text-align: center; }
-    .stat h3 { font-size: 32px; color: #667eea; margin-bottom: 10px; }
-    .stat p { color: #aaa; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 40px; }
-    .card { background: #1a1f3a; padding: 20px; border-radius: 8px; border: 1px solid #333; transition: transform 0.3s; }
-    .card:hover { transform: translateY(-5px); }
-    .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; }
-    .card h3 { margin-bottom: 10px; }
-    .card p { color: #aaa; font-size: 14px; margin-bottom: 15px; }
-    .price { color: #667eea; font-weight: bold; font-size: 18px; }
-    footer { background: #1a1f3a; padding: 40px; border-top: 1px solid #333; color: #aaa; }
-    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px; }
-    .footer-section h3 { color: #667eea; margin-bottom: 15px; }
-    .footer-section a { display: block; color: #aaa; text-decoration: none; margin: 8px 0; }
-    .footer-section a:hover { color: #fff; }
-    .se-customs { background: #0a0e27; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0; }
-    .se-customs h4 { color: #667eea; margin-bottom: 10px; }
-    .footer-bottom { text-align: center; padding-top: 20px; border-top: 1px solid #333; }
-    .charity-badge { background: #667eea; padding: 10px 15px; border-radius: 4px; display: inline-block; margin: 10px 0; }
-  </style>
 </head>
 <body>
-  <header>
-    <h1> The App Cabana</h1>
-    <nav>
-      <a href="/">Home</a>
-      <a href="/shop/browse?type=app">Apps</a>
-      <a href="/shop/browse?type=music">Music</a>
-      <a href="/shop/browse?type=art">Art</a>
-      <a href="/submit">Submit</a>
-      <a href="/contact">Contact</a>
-      <a href="/charity">Charity</a>
-      <% if (user) { %>
-        <a href="/admin/dashboard">Dashboard</a>
-        <a href="/auth/logout">Logout</a>
-      <% } else { %>
-        <a href="/auth/login">Login</a>
-        <a href="/auth/register">Register</a>
-      <% } %>
-    </nav>
-  </header>
 
-  <div class="hero">
-    <h2>Your Creative Store</h2>
-    <p>Discover amazing apps, music, and art from independent creators</p>
-    <a href="/shop/browse" class="btn">Explore Now</a>
-  </div>
-<audio id="songAudio" src="YOUR_SONG_FILE_URL.mp3" preload="metadata"></audio>
-<button id="previewBtn">Preview Song</button>
+  <!-- Your song preview elements -->
+  <audio id="songAudio" src="YOUR_SONG_FILE_URL.mp3" preload="metadata"></audio>
+  <button id="previewBtn">Preview Song</button>
 
-  <div class="stats">
-    <div class="stat">
-      <h3><%= stats.total_products %></h3>
-      <p>Products Available</p>
-    </div>
-    <div class="stat">
-      <h3><%= stats.total_downloads %></h3>
-      <p>Total Downloads</p>
-    </div>
-    <div class="stat">
-      <h3><%= stats.total_creators %></h3>
-      <p>Active Creators</p>
-    </div>
-  </div>
+  <!-- The script to make the button work -->
+  <script>
+    const audio = document.getElementById('songAudio');
+    const previewBtn = document.getElementById('previewBtn');
+    let previewTimer;
 
-  <h2 style="padding: 40px 40px 20px;">Featured</h2>
-  <div class="grid">
-    <% products.forEach(p => { %>
-      <div class="card">
-        <div style="background: #333; height: 180px; border-radius: 6px; margin-bottom: 15px;"></div>
-        <h3><%= p.title %></h3>
-        <p><%= p.description ? p.description.substring(0, 100) : 'No description' %></p>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span class="price">$<%= (p.price_cents / 100).toFixed(2) %></span>
-          <a href="/shop/product/<%= p.slug %>" class="btn" style="padding: 8px 15px; font-size: 14px;">View</a>
-        </div>
-      </div>
-    <% }) %>
-  </div>
-<script>
-  const audio = document.getElementById('songAudio');
-  const previewBtn = document.getElementById('previewBtn');
-  let previewTimer;
+    previewBtn.addEventListener('click', () => {
+      if (!audio.paused) {
+        audio.pause();
+        clearTimeout(previewTimer);
+        previewBtn.innerText = "Preview Song";
+        return;
+      }
 
-  previewBtn.addEventListener('click', () => {
-    if (!audio.paused) {
-      audio.pause();
-      clearTimeout(previewTimer);
-      previewBtn.innerText = "Preview Song";
-      return;
+      if (audio.readyState >= 1) { 
+        playMidPreview();
+      } else {
+        audio.addEventListener('loadedmetadata', playMidPreview, { once: true });
+      }
+    });
+
+    function playMidPreview() {
+      const duration = audio.duration;
+      
+      if (duration > 20) {
+        audio.currentTime = (duration / 2) - 10;
+      } else {
+        audio.currentTime = 0;
+      }
+
+      audio.play();
+      previewBtn.innerText = "Stop Preview";
+
+      previewTimer = setTimeout(() => {
+        audio.pause();
+        previewBtn.innerText = "Preview Song";
+      }, 20000); 
     }
-
-    if (audio.readyState >= 1) { 
-      playMidPreview();
-    } else {
-      audio.addEventListener('loadedmetadata', playMidPreview, { once: true });
-    }
-  });
-
-  function playMidPreview() {
-    const duration = audio.duration;
-    
-    if (duration > 20) {
-      audio.currentTime = (duration / 2) - 10;
-    } else {
-      audio.currentTime = 0;
-    }
-
-    audio.play();
-    previewBtn.innerText = "Stop Preview";
-
-    previewTimer = setTimeout(() => {
-      audio.pause();
-      previewBtn.innerText = "Preview Song";
-    }, 20000); 
-  }
-</script>
-
-  <footer>
-    <div class="footer-grid">
-      <div class="footer-section">
-        <h3> The App Cabana</h3>
-        <p>Your creative marketplace for apps, music, and art.</p>
-        <a href="/contact">Contact Us</a>
-        <a href="/charity">Charity Initiative</a>
-      </div>
-
-      <div class="footer-section">
-        <h3>Company</h3>
-        <strong>MYM LOGIC LLC</strong>
-        <a href="tel:5099002468">📞 509-900-2468</a>
-        <a href="mailto:MYMLOGIC.LLC@OUTLOOK.COM">📧 MYMLOGIC.LLC@OUTLOOK.COM</a>
-        <p style="margin-top: 10px; font-size: 12px;">Kennewick, WA 99336, USA</p>
-      </div>
-
-      <div class="footer-section">
-        <h3>Quick Links</h3>
-        <a href="/submit">Submit Your Work</a>
-        <a href="/shop/browse">Browse All</a>
-        <a href="/contact">Get in Touch</a>
-        <a href="/charity">Support Charity</a>
-      </div>
-
-      <div class="footer-section">
-        <h3>SE CUSTOMS</h3>
-        <div class="se-customs">
-          <h4>🎨 Brand Design & Consulting</h4>
-          <p style="font-size: 12px; margin-bottom: 10px;">Custom branding, graphics, and creative direction for your business.</p>
-          <a href="/contact?service=se-customs" style="color: #667eea; font-weight: bold;">Inquire About Services</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <p>&copy; 2026 MYM LOGIC LLC. All rights reserved.</p>
-      <p style="font-size: 12px; margin-top: 10px;">The App Cabana - Supporting Independent Creators & <a href="/charity" style="color: #667eea;">The #7 Pencil Making its Mark in  Mental Health</a></p>
-    </div>
-  </footer>
+  </script>
 </body>
 </html>
