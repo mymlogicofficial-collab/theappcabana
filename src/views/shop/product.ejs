@@ -14,6 +14,10 @@
     .price { font-size: 24px; color: #667eea; font-weight: bold; margin: 20px 0; }
     .description { line-height: 1.6; margin-bottom: 30px; }
     .btn { padding: 12px 30px; background: #667eea; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+    .btn:hover { background: #764ba2; }
+    .preview-section { background: #1a1f3a; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #333; }
+    .preview-section h3 { margin-bottom: 15px; color: #667eea; }
+    audio { width: 100%; margin-bottom: 15px; }
     .reviews { margin-top: 40px; }
     .review { background: #1a1f3a; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; }
     .stars { color: #667eea; }
@@ -21,7 +25,6 @@
   </style>
 </head>
 <body>
-  <%- include('../partials/navbar') %>
   <div class="container">
     <a href="/shop/browse" style="color: #667eea;">← Back to Browse</a>
 
@@ -33,6 +36,17 @@
           By <strong><%= product.creator %></strong> | <%= product.download_count %> downloads
           <br><span class="stars">★ <%= product.avg_rating.toFixed(1) %> (<%= product.review_count %> reviews)</span>
         </div>
+        
+        <% if (product.type === 'music' && product.preview_url) { %>
+          <div class="preview-section">
+            <h3>Listen to Preview (20 seconds)</h3>
+            <audio controls>
+              <source src="<%= product.preview_url %>" type="audio/mpeg">
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        <% } %>
+
         <div class="price">$<%= (product.price_cents / 100).toFixed(2) %></div>
         <p class="description"><%= product.description %></p>
         <button class="btn">Download Now</button>

@@ -41,4 +41,21 @@ router.get('/products', async (req, res) => {
   }
 });
 
+router.get('/stats', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM app_stats LIMIT 1');
+    const stats = result.rows[0] || { total_users: 0, promo_milestone: 100 };
+    
+    res.json({
+      total_users: stats.total_users,
+      promo_active: stats.promo_active,
+      promo_milestone: stats.promo_milestone,
+      users_until_milestone: Math.max(0, stats.promo_milestone - stats.total_users)
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
 module.exports = router;

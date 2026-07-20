@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchase Successful - The App Cabana</title>
+  <style>
+    body { font-family: sans-serif; background: #0a0e27; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .success-box { background: #1a1f3a; padding: 40px; border-radius: 8px; text-align: center; border: 1px solid #333; max-width: 500px; }
+    h1 { color: #00cc00; margin-bottom: 20px; }
+    .checkmark { font-size: 80px; margin-bottom: 20px; }
+    .details { background: #0a0e27; padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left; }
+    .detail-row { display: flex; justify-content: space-between; margin: 10px 0; }
+    .btn { display: inline-block; padding: 12px 30px; background: #667eea; color: #fff; text-decoration: none; border-radius: 8px; margin: 10px; }
+    .btn:hover { background: #764ba2; }
+  </style>
+</head>
+<body>
+  <div class="success-box">
+    <div class="checkmark">✓</div>
+    <h1>Purchase Successful!</h1>
+    
+    <div class="details">
+      <div class="detail-row">
+        <strong>Product:</strong>
+        <span><%= product.title %></span>
+      </div>
+      <div class="detail-row">
+        <strong>Price:</strong>
+        <span>$<%= (product.price_cents / 100).toFixed(2) %></span>
+      </div>
+      <div class="detail-row">
+        <strong>Type:</strong>
+        <span><%= type === 'digital' ? 'Digital Download' : 'Physical Merch Order' %></span>
+      </div>
+    </div>
+
+    <% if (type === 'digital') { %>
+      <p style="color: #aaa; margin-bottom: 20px;">Your download is ready!</p>
+      <a href="/shop/download/<%= product.id %>" class="btn">📥 Download Now</a>
+    <% } else { %>
+      <p style="color: #aaa; margin-bottom: 20px;">Your merch order has been sent to Printful. Check your email for tracking!</p>
+    <% } %>
+
+    <a href="/shop/browse" class="btn">Continue Shopping</a>
+  </div>
+</body>
+</html>

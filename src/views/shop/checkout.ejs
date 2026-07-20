@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - The App Cabana</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    body { font-family: sans-serif; background: #0a0e27; color: #fff; }
+    .container { max-width: 600px; margin: 0 auto; padding: 40px; }
+    .checkout-box { background: #1a1f3a; padding: 40px; border-radius: 8px; border: 1px solid #333; }
+    h1 { margin-bottom: 10px; color: #667eea; }
+    .product-info { background: #0a0e27; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #333; }
+    .price { font-size: 24px; color: #667eea; font-weight: bold; margin: 15px 0; }
+    .options { display: flex; gap: 15px; margin-bottom: 30px; flex-direction: column; }
+    .option-btn { padding: 15px 20px; background: #0a0e27; border: 2px solid #333; color: #fff; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.3s; }
+    .option-btn:hover { border-color: #667eea; background: #1a1f3a; }
+    .option-btn.selected { border-color: #667eea; background: #667eea; }
+    .option-title { font-weight: bold; margin-bottom: 5px; }
+    .option-desc { font-size: 12px; color: #aaa; }
+    #card-element { background-color: #0a0e27; padding: 10px; border: 1px solid #333; border-radius: 4px; margin-bottom: 20px; }
+    .btn { width: 100%; padding: 12px; background: #667eea; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+    .btn:hover { background: #764ba2; }
+    .btn:disabled { background: #555; cursor: not-allowed; }
+    .error { color: #ff6b6b; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="checkout-box">
+      <h1><%= product.title %></h1>
+      
+      <div class="product-info">
+        <p><%= product.description %></p>
+        <div class="price">$<%= (product.price_cents / 100).toFixed(2) %></div>
+      </div>
+
+      <h3>How would you like it?</h3>
+      
+      <div class="options">
+        <button class="option-btn selected" onclick="selectOption('digital')">
+          <div class="option-title">📱 Digital Download</div>
+          <div class="option-desc">Instant access - download now</div>
+        </button>
+        <button class="option-btn" onclick="selectOption('merch')">
+          <div class="option-title">👕 Physical Merch</div>
+          <div class="option-desc">Get it printed on shirt, hat, hoodie, etc.</div>
+        </button>
+      </div>
+
+      <div id="digital-checkout" style="display: block;">
+        <form id="payment-form">
+          <div id="card-element"></div>
+          <button type="submit" class="btn">Pay $<%= (product.price_cents / 100).toFixed(2) %></button>
+          <div id="error-message" class="error"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let selectedOption = 'digital';
+    const stripe = Stripe('<%= stripePublishableKey %>');
+    const elements = stripe.elements();
+    const cardElement = elements.create('card');
+    cardElement.mount('#card-element');
+
+    function selectOption(option) {
+      selectedOption = option;
+      document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+      event.target.closest('.option-btn').classList.add('selected');
+
+      if (option === 'merch') {
+        window.location.href = '/shop/checkout/merch/<%= product.id %>';
+      }
+    }
+
+    document.getElementById('payment-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const response = await fetch('/shop/checkout/digital/<%= product.id %>', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const { sessionId } = await response.json();
+
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      if (error) {
+        document.getElementById('error-message').textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>

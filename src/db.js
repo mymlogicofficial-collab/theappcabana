@@ -33,8 +33,8 @@ async function initDatabase() {
         description TEXT,
         price_cents INTEGER NOT NULL,
         file_path TEXT,
-        cover_url TEXT,
         preview_url TEXT,
+        cover_url TEXT,
         download_count INTEGER DEFAULT 0,
         is_featured BOOLEAN DEFAULT false,
         is_approved BOOLEAN DEFAULT false,
@@ -63,15 +63,13 @@ async function initDatabase() {
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         rating INTEGER CHECK (rating >= 1 AND rating <= 5),
         comment TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        UNIQUE(product_id, user_id)
+        created_at TIMESTAMP DEFAULT NOW()
       )
     `);
 
     console.log('Database initialized successfully');
   } catch (err) {
     console.error('Database init error:', err.message);
-    throw err;
   }
 }
 
