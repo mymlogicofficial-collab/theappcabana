@@ -118,7 +118,6 @@
       border-radius: 8px;
       overflow: hidden;
       transition: 0.3s;
-      cursor: pointer;
     }
     
     .product-card:hover {
@@ -136,6 +135,7 @@
       justify-content: center;
       color: #666;
       overflow: hidden;
+      cursor: pointer;
     }
     
     .product-image img {
@@ -152,6 +152,26 @@
     .product-creator { color: #aaa; font-size: 0.9rem; margin-bottom: 10px; }
     .product-price { color: #667eea; font-weight: bold; font-size: 1.2rem; }
     .product-rating { color: #ffc107; font-size: 0.9rem; margin-top: 8px; }
+    
+    .preview-player {
+      background: rgba(102, 126, 234, 0.1);
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 6px;
+      border: 1px solid #333;
+    }
+    
+    .preview-label {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    audio {
+      width: 100%;
+      height: 30px;
+    }
     
     footer {
       background: rgba(10, 14, 39, 0.95);
@@ -217,8 +237,8 @@
     <div class="products-grid">
       <% if (products && products.length > 0) { %>
         <% products.forEach(product => { %>
-          <div class="product-card" onclick="window.location.href='/shop/product/<%= product.slug %>'">
-            <div class="product-image">
+          <div class="product-card">
+            <div class="product-image" onclick="window.location.href='/shop/product/<%= product.slug %>'">
               <% if (product.cover_url) { %>
                 <img src="<%= product.cover_url %>" alt="<%= product.title %>">
               <% } else { %>
@@ -226,10 +246,20 @@
               <% } %>
             </div>
             <div class="product-info">
-              <div class="product-title"><%= product.title.substring(0, 40) %><% if (product.title.length > 40) { %>...<% } %></div>
+              <div class="product-title" onclick="window.location.href='/shop/product/<%= product.slug %>'" style="cursor: pointer;"><%= product.title.substring(0, 40) %><% if (product.title.length > 40) { %>...<% } %></div>
               <div class="product-creator">by <%= product.creator || 'Unknown' %></div>
               <div class="product-price">$<%= (product.price_cents / 100).toFixed(2) %></div>
               <div class="product-rating">⭐ <%= product.avg_rating ? product.avg_rating.toFixed(1) : 'N/A' %> (<%= product.review_count || 0 %> reviews)</div>
+              
+              <% if (product.type === 'music' && product.preview_url) { %>
+                <div class="preview-player">
+                  <span class="preview-label">🎵 Listen to preview</span>
+                  <audio controls>
+                    <source src="<%= product.preview_url %>" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              <% } %>
             </div>
           </div>
         <% }) %>
