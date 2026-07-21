@@ -3,22 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upload Physical Product - The App Cabana</title>
+  <title>Create Physical Product - The App Cabana</title>
   <style>
-    body { font-family: sans-serif; background: #0a0e27; color: #fff; padding: 40px; }
-    .container { max-width: 600px; margin: 0 auto; }
-    h1 { color: #667eea; margin-bottom: 30px; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; font-weight: bold; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #fff; padding: 40px; }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1 { color: #667eea; margin-bottom: 10px; }
+    .subtitle { color: #aaa; margin-bottom: 30px; font-size: 14px; }
+    .form-group { margin-bottom: 25px; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
     input, select, textarea { 
       width: 100%; 
-      padding: 10px; 
+      padding: 12px; 
       background: #1a1f3a; 
       border: 1px solid #333; 
       color: #fff; 
       border-radius: 4px; 
-      font-family: sans-serif;
+      font-family: inherit;
       box-sizing: border-box;
+      font-size: 14px;
+    }
+    input:focus, select:focus, textarea:focus { 
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     textarea { resize: vertical; min-height: 100px; }
     .btn { 
@@ -29,125 +36,161 @@
       border-radius: 4px; 
       cursor: pointer; 
       font-size: 16px;
+      font-weight: 600;
       width: 100%;
+      transition: 0.3s;
     }
     .btn:hover { background: #5568d3; }
-    .back-link { color: #667eea; text-decoration: none; margin-bottom: 20px; display: block; }
+    .back-link { color: #667eea; text-decoration: none; margin-bottom: 20px; display: inline-block; }
     .back-link:hover { text-decoration: underline; }
-    .error { background: #2a1a1a; color: #ff6b6b; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
-    .info { background: #1a2a3a; color: #aaa; padding: 10px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
-    .variants-section { background: #1a1f3a; padding: 15px; border-radius: 4px; margin-top: 10px; max-height: 250px; overflow-y: auto; }
-    .variant-item { margin-bottom: 10px; }
-    .variant-item input { margin-right: 8px; width: auto; display: inline-block; }
-    .variant-item label { display: inline; margin-bottom: 0; margin-left: 5px; font-size: 14px; }
-    .variant-item small { display: block; margin-left: 24px; color: #999; font-size: 12px; }
+    .error { background: rgba(255, 107, 107, 0.1); color: #ff6b6b; padding: 12px; border-radius: 4px; margin-bottom: 20px; border-left: 3px solid #ff6b6b; }
+    .info { background: rgba(102, 126, 234, 0.1); color: #aaa; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; border-left: 3px solid #667eea; }
+    .variants-section { background: rgba(26, 31, 58, 0.5); padding: 15px; border-radius: 4px; margin-top: 10px; max-height: 300px; overflow-y: auto; border: 1px solid #333; }
+    .variant-item { margin-bottom: 12px; padding: 8px; background: rgba(10, 14, 39, 0.5); border-radius: 3px; }
+    .variant-item input { margin-right: 8px; width: auto; display: inline-block; cursor: pointer; }
+    .variant-item label { display: inline; margin-bottom: 0; margin-left: 5px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .variant-item small { display: block; margin-left: 24px; color: #999; font-size: 12px; margin-top: 3px; }
+    .loading { color: #aaa; text-align: center; padding: 20px; font-size: 14px; }
+    .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #667eea; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    small { color: #999; font-size: 12px; margin-top: 5px; display: block; }
+    .required { color: #ff6b6b; }
   </style>
 </head>
 <body>
   <div class="container">
-    <a href="/admin/upload" class="back-link">← Back to Digital Upload</a>
+    <a href="/admin/dashboard" class="back-link">← Back to Dashboard</a>
     
-    <h1>Upload Physical Product to Printful</h1>
-    <p style="color: #aaa; margin-bottom: 20px;">Design will be synced to Printful automatically for on-demand printing</p>
+    <h1>Create Physical Product</h1>
+    <p class="subtitle">Sync your design to Printful for on-demand printing. We handle production & shipping.</p>
 
     <% if (error) { %>
       <div class="error"><%= error %></div>
     <% } %>
 
     <div class="info">
-      💡 Upload design image. Select product type (shirt, mug, hat, etc.). Choose which size/color variants to offer. We'll sync to Printful and handle fulfillment.
+      💡 <strong>How it works:</strong> Upload your design. Select product type (shirts, hats, stickers, etc). Pick size/color variants. We'll sync to Printful for fulfillment.
     </div>
 
-    <form method="POST" action="/admin/upload-physical" enctype="multipart/form-data">
+    <form method="POST" action="/admin/upload-physical" enctype="multipart/form-data" onsubmit="return validateForm()">
       
       <div class="form-group">
-        <label for="title">Product Title *</label>
-        <input type="text" id="title" name="title" required placeholder="e.g., Cool Band Tee Design">
+        <label for="title">Product Title <span class="required">*</span></label>
+        <input type="text" id="title" name="title" required placeholder="e.g., DeFacing Da'Clock Design on Shirt">
       </div>
 
       <div class="form-group">
-        <label for="category">Product Type *</label>
-        <select id="category" name="category" required>
-          <option value="">-- Select Product Type --</option>
+        <label for="category">Product Type <span class="required">*</span></label>
+        <select id="category" name="category" required onchange="loadVariants()">
+          <option value="">-- Select a product type --</option>
           <option value="t-shirts">T-Shirts</option>
           <option value="hoodies">Hoodies</option>
+          <option value="sweatshirts">Sweatshirts</option>
           <option value="mugs">Mugs (11oz)</option>
           <option value="hats">Baseball Caps</option>
+          <option value="beanies">Beanies</option>
           <option value="phone-cases">Phone Cases</option>
           <option value="pillows">Throw Pillows</option>
           <option value="blankets">Throw Blankets</option>
           <option value="stickers">Stickers (4x4)</option>
+          <option value="tote-bags">Tote Bags</option>
         </select>
       </div>
 
       <div class="form-group">
         <label for="description">Description</label>
-        <textarea id="description" name="description" placeholder="Product description..."></textarea>
+        <textarea id="description" name="description" placeholder="Describe your design and product..."></textarea>
       </div>
 
       <div class="form-group">
-        <label for="price">Your Selling Price ($) *</label>
-        <input type="number" id="price" name="price" step="0.01" min="0" required placeholder="10.00">
-        <small style="color: #aaa; margin-top: 5px; display: block;">Price you want to sell at. Printful cost added on top, you keep the margin.</small>
+        <label for="price">Your Selling Price (USD) <span class="required">*</span></label>
+        <input type="number" id="price" name="price" step="0.01" min="1.00" required placeholder="28.00">
+        <small>Printful's production cost is added on top of this price. You keep the difference as profit.</small>
       </div>
 
       <div class="form-group">
-        <label for="design">Design Image *</label>
+        <label for="design">Design Image <span class="required">*</span></label>
         <input type="file" id="design" name="design" accept="image/*" required>
-        <small style="color: #aaa; margin-top: 5px; display: block;">Design for the product (will be the cover/thumbnail)</small>
+        <small>PNG or JPG recommended. This will be the product cover/thumbnail.</small>
       </div>
 
-      <div id="variants-loading" style="display: none; color: #aaa; text-align: center; padding: 20px;">
-        Loading variants from Printful...
+      <div id="variants-loading" style="display: none;" class="loading">
+        <div class="loading-spinner"></div> Loading available sizes & colors...
       </div>
 
       <div id="variants-section" class="form-group" style="display: none;">
-        <label>Available Variants (Select which to offer) *</label>
+        <label>Available Variants <span class="required">*</span></label>
+        <p style="font-size: 12px; color: #999; margin-bottom: 10px;">Select which sizes/colors you want to offer:</p>
         <div id="variants-list" class="variants-section">
           <!-- Populated by JavaScript -->
         </div>
+        <small style="margin-top: 10px;">All checked variants will be synced to Printful.</small>
       </div>
 
-      <button type="submit" class="btn">Add to Zazzle Catalog & Save</button>
+      <button type="submit" class="btn">Sync to Printful & Save Product</button>
     </form>
   </div>
 
   <script>
+    let selectedVariants = [];
+
     async function loadVariants() {
       const category = document.getElementById('category').value;
-      if (!category) return;
+      if (!category) {
+        document.getElementById('variants-section').style.display = 'none';
+        return;
+      }
 
       document.getElementById('variants-loading').style.display = 'block';
       document.getElementById('variants-section').style.display = 'none';
 
       try {
         const response = await fetch(`/api/printful/variants/${category}`);
+        if (!response.ok) throw new Error('Failed to load variants');
+        
         const data = await response.json();
 
         if (data.variants && data.variants.length > 0) {
           const variantsList = document.getElementById('variants-list');
           variantsList.innerHTML = '';
+          selectedVariants = [];
 
-          data.variants.forEach(variant => {
+          data.variants.slice(0, 10).forEach(variant => {
             const div = document.createElement('div');
             div.className = 'variant-item';
+            const isInStock = variant.in_stock !== false;
+            const stockStatus = isInStock ? '✓ In stock' : '✗ Out of stock';
+            
             div.innerHTML = `
-              <input type="checkbox" name="variants" value="${variant.id}" id="variant-${variant.id}" checked>
+              <input type="checkbox" name="variants" value="${variant.id}" id="variant-${variant.id}" checked onchange="updateSelectedVariants()">
               <label for="variant-${variant.id}"><strong>${variant.name}</strong></label>
-              <small>Stock: ${variant.in_stock ? '✓ Available' : '✗ Out of stock'}</small>
+              <small>${stockStatus}${variant.color ? ` • ${variant.color}` : ''}</small>
             `;
             variantsList.appendChild(div);
+            if (isInStock) selectedVariants.push(variant.id);
           });
 
           document.getElementById('variants-section').style.display = 'block';
           document.getElementById('variants-loading').style.display = 'none';
         } else {
-          document.getElementById('variants-loading').innerHTML = '❌ No variants found for this product type';
+          document.getElementById('variants-loading').innerHTML = '❌ No variants available for this product type.';
         }
       } catch (err) {
         console.error('Error loading variants:', err);
-        document.getElementById('variants-loading').innerHTML = '❌ Failed to load variants';
+        document.getElementById('variants-loading').innerHTML = '❌ Could not load variants. Please try again.';
       }
+    }
+
+    function updateSelectedVariants() {
+      selectedVariants = Array.from(document.querySelectorAll('input[name="variants"]:checked')).map(el => el.value);
+    }
+
+    function validateForm() {
+      if (selectedVariants.length === 0) {
+        alert('Please select at least one product variant (size/color).');
+        return false;
+      }
+      return true;
     }
   </script>
 </body>
