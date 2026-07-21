@@ -289,7 +289,7 @@ router.post('/upload-physical', requireAuth, upload.fields([{ name: 'design', ma
         name: title,
         description: description || '',
         category: category,
-        variants: variants.map(v => parseInt(v))
+        variants: []
       });
 
       // Save Printful sync info
