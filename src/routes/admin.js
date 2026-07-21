@@ -174,7 +174,7 @@ router.get('/edit/:id', requireAuth, async (req, res) => {
 });
 
 // Update product
-router.post('/edit/:id', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 }]), async (req, res) => {
+router.post('/edit/:id', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 }, { name: 'file', maxCount: 1 }]), async (req, res) => {
   const { title, description, price, type, is_featured } = req.body;
 
   try {
@@ -191,18 +191,51 @@ router.post('/edit/:id', requireAuth, upload.fields([{ name: 'cover', maxCount: 
     const p = product.rows[0];
     const price_cents = Math.round(parseFloat(price) * 100) || 0;
     let coverUrl = p.cover_url;
+    let fileUrl = p.file_path;
+    let previewUrl = p.preview_url;
 
     // Update cover if new one uploaded
     if (req.files.cover) {
       coverUrl = `/uploads/${req.files.cover[0].filename}`;
     }
 
+    // Update music file and regenerate preview if new one uploaded
+    if (req.files.file && type === 'music') {
+      fileUrl = `/uploads/${req.files.file[0].filename}`;
+      const filePath = path.join(__dirname, '../public/uploads', req.files.file[0].filename);
+      
+      try {
+        console.log(`[Edit] Regenerating preview for updated music file: ${req.files.file[0].filename}`);
+        
+        // Generate new preview
+        const previewFilename = `preview-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`;
+        const previewPath = path.join(__dirname, '../public/uploads', previewFilename);
+        previewUrl = `/uploads/${previewFilename}`;
+        
+        await generateMusicPreview(filePath, previewPath);
+        console.log(`[Edit] Preview regenerated successfully at: ${previewUrl}`);
+        
+        // Delete old preview file if it exists
+        if (p.preview_url) {
+          const oldPreviewPath = path.join(__dirname, '../public/uploads', p.preview_url.split('/').pop());
+          if (fs.existsSync(oldPreviewPath)) {
+            fs.unlinkSync(oldPreviewPath);
+            console.log(`[Edit] Deleted old preview: ${oldPreviewPath}`);
+          }
+        }
+      } catch (ffmpegErr) {
+        console.error(`[Edit] Failed to regenerate preview:`, ffmpegErr.message);
+        previewUrl = p.preview_url; // Keep old preview if regeneration fails
+      }
+    }
+
     await pool.query(`
       UPDATE products 
-      SET title = $1, description = $2, price_cents = $3, type = $4, cover_url = $5, is_featured = $6, updated_at = NOW()
-      WHERE id = $7
-    `, [title, description, price_cents, type, coverUrl, is_featured === 'true', req.params.id]);
+      SET title = $1, description = $2, price_cents = $3, type = $4, cover_url = $5, file_path = $6, preview_url = $7, is_featured = $8, updated_at = NOW()
+      WHERE id = $9
+    `, [title, description, price_cents, type, coverUrl, fileUrl, previewUrl, is_featured === 'true', req.params.id]);
 
+    console.log(`[Edit] Product updated: ID ${req.params.id}, preview_url: ${previewUrl}`);
     res.redirect(`/shop/product/${p.slug}`);
   } catch (err) {
     console.error(err);
@@ -210,7 +243,7 @@ router.post('/edit/:id', requireAuth, upload.fields([{ name: 'cover', maxCount: 
       'SELECT * FROM products WHERE id = $1 AND user_id = $2',
       [req.params.id, req.session.user.id]
     );
-    res.render('admin/edit', { product: product.rows[0], error: 'Failed to update product' });
+    res.render('admin/edit', { product: product.rows[0], error: 'Failed to update product: ' + err.message });
   }
 });
 
