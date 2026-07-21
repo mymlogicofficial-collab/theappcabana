@@ -249,7 +249,7 @@ router.post('/edit/:id', requireAuth, upload.fields([{ name: 'cover', maxCount: 
 
 // Physical product upload page
 router.get('/upload-physical', requireAuth, (req, res) => {
-  res.render('admin/upload-physical', { error: null });
+  res.render('admin/upload-physical', { error: null, success: null });
 });
 
 // Physical product upload handler
@@ -265,7 +265,7 @@ router.post('/upload-physical', requireAuth, upload.fields([{ name: 'design', ma
   try {
     if (!title || !category || !req.files.design || variants.length === 0) {
       return res.render('admin/upload-physical', { 
-        error: 'Missing required fields or no variants selected' 
+        error: 'Missing required fields or no variants selected', success: null 
       });
     }
     
@@ -309,11 +309,12 @@ router.post('/upload-physical', requireAuth, upload.fields([{ name: 'design', ma
 
       res.render('admin/upload-physical', { 
         error: `Product created but failed to sync to Printful: ${printfulErr.message}. Retry sync manually later.` 
+      , success: null
       });
     }
   } catch (err) {
     console.error(err);
-    res.render('admin/upload-physical', { error: 'Something went wrong' });
+    res.render('admin/upload-physical', { error: 'Something went wrong', success: null });
   }
 });
 
