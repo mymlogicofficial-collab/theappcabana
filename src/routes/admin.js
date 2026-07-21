@@ -3,10 +3,19 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
+const { execSync } = require('child_process');
 const { pool } = require('../db');
 const printful = require('../services/printful');
 
 const router = express.Router();
+
+// Set FFmpeg path for Alpine Linux
+try {
+  ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+  ffmpeg.setFfprobePath('/usr/bin/ffprobe');
+} catch (err) {
+  console.warn('FFmpeg binaries not found at default Alpine paths');
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -32,6 +41,52 @@ const upload = multer({
 function requireAuth(req, res, next) {
   if (!req.session.user) return res.redirect('/auth/login');
   next();
+}
+
+// Helper: Generate music preview using FFmpeg
+async function generateMusicPreview(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    try {
+      // First get duration using ffprobe
+      ffmpeg.ffprobe(inputPath, (err, metadata) => {
+        if (err) {
+          console.error('FFprobe error:', err.message);
+          return reject(err);
+        }
+
+        const duration = Math.floor(metadata.format.duration || 180); // Default to 3 mins if unknown
+        const startTime = Math.max(0, Math.floor(duration / 2) - 10); // 10 seconds before middle
+        
+        console.log(`[FFmpeg] Song duration: ${duration}s, extracting from ${startTime}s for 20s preview`);
+
+        // Extract 20-second clip from middle
+        ffmpeg(inputPath)
+          .setStartTime(startTime)
+          .setDuration(20)
+          .audioCodec('libmp3lame')
+          .audioBitrate('128k')
+          .output(outputPath)
+          .on('start', (cmd) => {
+            console.log(`[FFmpeg] Starting preview generation: ${cmd}`);
+          })
+          .on('progress', (progress) => {
+            console.log(`[FFmpeg] Processing... ${Math.round(progress.percent || 0)}% complete`);
+          })
+          .on('end', () => {
+            console.log(`[FFmpeg] Preview successfully created: ${outputPath}`);
+            resolve();
+          })
+          .on('error', (err) => {
+            console.error(`[FFmpeg] Error generating preview:`, err.message);
+            reject(err);
+          })
+          .run();
+      });
+    } catch (err) {
+      console.error('[FFmpeg] Unexpected error:', err.message);
+      reject(err);
+    }
+  });
 }
 
 router.get('/dashboard', requireAuth, async (req, res) => {
@@ -76,41 +131,12 @@ router.post('/upload', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 
       previewUrl = `/uploads/${previewFilename}`;
 
       try {
-        // Get audio duration first, then extract from middle
-        await new Promise((resolve, reject) => {
-          ffmpeg.ffprobe(filePath, (err, metadata) => {
-            if (err) {
-              console.error('FFprobe error:', err);
-              reject(err);
-              return;
-            }
-
-            const duration = Math.floor(metadata.format.duration);
-            const startTime = Math.max(0, Math.floor(duration / 2) - 10); // Start 10 seconds before middle
-            
-            console.log(`Song duration: ${duration}s, extracting from ${startTime}s`);
-
-            ffmpeg(filePath)
-              .setStartTime(startTime)
-              .setDuration(20)
-              .audioCodec('libmp3lame')
-              .audioBitrate('128k')
-              .output(previewPath)
-              .on('end', () => {
-                console.log(`Preview created from middle of song: ${previewPath}`);
-                resolve();
-              })
-              .on('error', (err) => {
-                console.error('FFmpeg error:', err);
-                reject(err);
-              })
-              .run();
-          });
-        });
+        console.log(`[Upload] Generating preview for music file: ${req.files.file[0].filename}`);
+        await generateMusicPreview(filePath, previewPath);
+        console.log(`[Upload] Preview generated successfully at: ${previewUrl}`);
       } catch (ffmpegErr) {
-        console.error('Failed to create preview:', ffmpegErr.message);
-        // Don't fail the upload if preview fails, just skip it
-        previewUrl = null;
+        console.error(`[Upload] Failed to generate preview:`, ffmpegErr.message);
+        previewUrl = null; // Don't fail upload if preview fails
       }
     }
     
@@ -120,6 +146,7 @@ router.post('/upload', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 
       RETURNING id, slug
     `, [req.session.user.id, type, title, slug, description, price_cents, fileUrl, coverUrl, previewUrl]);
     
+    console.log(`[Upload] Product created: ID ${result.rows[0].id}, preview_url: ${previewUrl}`);
     res.redirect(`/shop/product/${result.rows[0].slug}`);
   } catch (err) {
     console.error(err);
