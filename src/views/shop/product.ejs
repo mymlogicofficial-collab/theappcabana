@@ -44,7 +44,13 @@
     <a href="/shop/browse" style="color: #667eea;">← Back to Browse</a>
 
     <div class="product-header">
-      <div class="product-image"></div>
+      <div class="product-image">
+        <% if (product.cover_url) { %>
+          <img src="<%= product.cover_url %>" alt="<%= product.title %>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+        <% } else { %>
+          <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666; font-size: 48px;">📦</div>
+        <% } %>
+      </div>
       <div class="product-info">
         <h1><%= product.title %></h1>
         <div class="product-meta">
