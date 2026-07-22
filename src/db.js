@@ -160,6 +160,16 @@ async function initDatabase() {
       }
     }
 
+    // MAKE YOUR ACCOUNT ADMIN
+    try {
+      await pool.query(`
+        UPDATE users SET is_admin = true WHERE email = 'eubankssterling6@gmail.com'
+      `);
+      console.log('[Setup] Made eubankssterling6@gmail.com an admin');
+    } catch (err) {
+      console.warn('Note: Admin user setup might have already run:', err.message);
+    }
+
     console.log('Database initialized successfully');
   } catch (err) {
     console.error('Database init error:', err.message);
