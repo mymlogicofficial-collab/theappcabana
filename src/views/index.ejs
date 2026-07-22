@@ -165,6 +165,47 @@
       text-shadow: 0 0 5px #00f0ff;
     }
 
+    .badges-section {
+      text-align: center;
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.1) 0%, rgba(0, 240, 255, 0.1) 100%);
+      margin: 40px auto;
+      max-width: 1200px;
+      border-radius: 8px;
+      border: 1px solid #9d4edd;
+    }
+
+    .badges-section h3 {
+      font-size: 20px;
+      color: #00f0ff;
+      margin-bottom: 25px;
+      text-shadow: 0 0 5px #00f0ff;
+    }
+
+    .badges-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .badge-item {
+      text-align: center;
+    }
+
+    .badge-item img {
+      height: 80px;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 0 10px #00f0ff);
+    }
+
+    .badge-item p {
+      color: #9d4edd;
+      font-size: 12px;
+      font-weight: bold;
+      text-shadow: 0 0 3px #9d4edd;
+    }
+
     .featured-section {
       max-width: 1200px;
       margin: 40px auto;
@@ -403,6 +444,21 @@
     <div class="stat-box">
       <div class="stat-number"><%= stats.total_creators %></div>
       <div class="stat-label">Independent Creators</div>
+    </div>
+  </div>
+
+  <!-- Trust Badges Section -->
+  <div class="badges-section">
+    <h3>🔒 Secure & Verified</h3>
+    <div class="badges-container">
+      <div class="badge-item">
+        <img src="/assets/app-harbor-badge.png" alt="App Harbor Verified">
+        <p>Security Verified</p>
+      </div>
+      <div class="badge-item">
+        <img src="/assets/docker-badge.png" alt="Proudly Containerized by Docker">
+        <p>Proudly Containerized</p>
+      </div>
     </div>
   </div>
 
