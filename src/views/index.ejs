@@ -3,56 +3,367 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The App Cabana - Apps, Music, Art</title>
+  <title>The App Cabana - Digital Products & Merchandise</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #fff; }
-    header { background: #1a1f3a; padding: 20px 40px; border-bottom: 1px solid #333; }
-    header h1 { font-size: 28px; margin-bottom: 10px; }
-    nav { display: flex; gap: 30px; flex-wrap: wrap; }
-    nav a { color: #ccc; text-decoration: none; transition: color 0.3s; }
-    nav a:hover { color: #fff; }
-    .hero { padding: 80px 40px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .hero h2 { font-size: 48px; margin-bottom: 20px; }
-    .hero p { font-size: 18px; margin-bottom: 30px; color: rgba(255,255,255,0.9); }
-    .btn { display: inline-block; padding: 12px 30px; background: #667eea; color: #fff; text-decoration: none; border-radius: 8px; cursor: pointer; border: none; font-size: 16px; margin: 5px; }
-    .btn:hover { background: #764ba2; }
-    .trust-section { background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); padding: 60px 40px; margin: 40px 0; border-top: 1px solid rgba(102, 126, 234, 0.3); border-bottom: 1px solid rgba(102, 126, 234, 0.3); }
-    .trust-container { max-width: 1200px; margin: 0 auto; text-align: center; }
-    .trust-container h3 { font-size: 24px; color: #667eea; margin-bottom: 30px; font-weight: bold; }
-    .badges { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 30px; margin-bottom: 20px; }
-    .badge { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    .badge img { width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); transition: transform 0.3s; }
-    .badge img:hover { transform: scale(1.1); }
-    .badge p { font-size: 12px; color: #666; font-weight: 600; margin: 0; line-height: 1.3; }
-    .trust-text { color: #999; font-size: 14px; margin-top: 20px; }
-    .stats { display: flex; justify-content: center; gap: 60px; padding: 40px; flex-wrap: wrap; }
-    .stat { text-align: center; }
-    .stat h3 { font-size: 32px; color: #667eea; margin-bottom: 10px; }
-    .stat p { color: #aaa; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 40px; }
-    .card { background: #1a1f3a; padding: 20px; border-radius: 8px; border: 1px solid #333; transition: transform 0.3s; }
-    .card:hover { transform: translateY(-5px); }
-    .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; }
-    .card h3 { margin-bottom: 10px; }
-    .card p { color: #aaa; font-size: 14px; margin-bottom: 15px; }
-    .price { color: #667eea; font-weight: bold; font-size: 18px; }
-    footer { background: #1a1f3a; padding: 40px; border-top: 1px solid #333; color: #aaa; }
-    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px; }
-    .footer-section h3 { color: #667eea; margin-bottom: 15px; }
-    .footer-section a { display: block; color: #aaa; text-decoration: none; margin: 8px 0; }
-    .footer-section a:hover { color: #fff; }
-    .se-customs { background: #0a0e27; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0; }
-    .se-customs h4 { color: #667eea; margin-bottom: 10px; }
-    .footer-bottom { text-align: center; padding-top: 20px; border-top: 1px solid #333; }
-    .charity-badge { background: #667eea; padding: 10px 15px; border-radius: 4px; display: inline-block; margin: 10px 0; }
+    
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+      color: #fff;
+      line-height: 1.6;
+    }
+    
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(10, 14, 39, 0.95);
+      border-bottom: 2px solid #9d4edd;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .navbar-brand {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #00f0ff;
+      text-shadow: 0 0 10px #00f0ff;
+    }
+    
+    .navbar-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .navbar a { 
+      color: #00f0ff; 
+      text-decoration: none; 
+      font-weight: 500; 
+      transition: all 0.3s;
+      text-shadow: 0 0 5px #00f0ff;
+    }
+    
+    .navbar a:hover { 
+      color: #9d4edd; 
+      text-shadow: 0 0 10px #9d4edd;
+    }
+    
+    .mascot-header {
+      text-align: center;
+      padding: 20px 0;
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.1) 0%, rgba(0, 240, 255, 0.1) 100%);
+      border-bottom: 1px solid #9d4edd;
+    }
+    
+    .mascot-header img {
+      height: 100px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px #00f0ff);
+    }
+    
+    .hero {
+      text-align: center;
+      padding: 60px 20px;
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.15) 0%, rgba(0, 240, 255, 0.15) 100%);
+      border-top: 1px solid #9d4edd;
+      border-bottom: 1px solid #9d4edd;
+    }
+    
+    .hero h1 { 
+      font-size: 3.5rem;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #9d4edd, #00f0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 20px rgba(157, 78, 221, 0.5);
+    }
+
+    .hero p { 
+      font-size: 1.2rem;
+      color: #00f0ff;
+      margin-bottom: 30px;
+      text-shadow: 0 0 5px #00f0ff;
+    }
+    
+    .cta-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #9d4edd, #00f0ff);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+      font-weight: bold;
+      box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
+    }
+    
+    .btn:hover { 
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
+      transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid #9d4edd;
+      color: #9d4edd;
+      box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: #9d4edd;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(157, 78, 221, 0.8);
+    }
+
+    .stats-section {
+      display: flex;
+      justify-content: center;
+      gap: 60px;
+      padding: 60px 40px;
+      flex-wrap: wrap;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.1) 0%, rgba(0, 240, 255, 0.1) 100%);
+      border-radius: 8px;
+      margin: 40px auto;
+    }
+
+    .stat-box {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      background: linear-gradient(135deg, #9d4edd, #00f0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+      font-weight: bold;
+      text-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
+    }
+
+    .stat-label {
+      color: #00f0ff;
+      font-size: 14px;
+      text-shadow: 0 0 5px #00f0ff;
+    }
+
+    .featured-section {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      margin-bottom: 30px;
+      text-align: center;
+      background: linear-gradient(135deg, #9d4edd, #00f0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .product-card {
+      background: #1a1f3a;
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid #9d4edd;
+      transition: all 0.3s;
+      box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      border-color: #00f0ff;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 180px;
+      overflow: hidden;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      background: #0a0e27;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #9d4edd;
+    }
+
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-info {
+      padding: 0;
+    }
+
+    .product-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+      cursor: pointer;
+      color: #00f0ff;
+      text-shadow: 0 0 5px #00f0ff;
+    }
+
+    .product-title:hover {
+      color: #9d4edd;
+      text-shadow: 0 0 10px #9d4edd;
+    }
+
+    .product-creator {
+      color: #9d4edd;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .product-price {
+      background: linear-gradient(135deg, #9d4edd, #00f0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .product-rating {
+      color: #00f0ff;
+      font-size: 12px;
+      margin-bottom: 10px;
+      text-shadow: 0 0 3px #00f0ff;
+    }
+
+    .preview-player {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #9d4edd;
+    }
+
+    .preview-label {
+      display: block;
+      font-size: 12px;
+      color: #00f0ff;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-shadow: 0 0 3px #00f0ff;
+    }
+
+    .preview-player audio {
+      width: 100%;
+      height: 24px;
+      filter: brightness(1.2);
+    }
+
+    .mascot-footer {
+      text-align: center;
+      padding: 20px 0;
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.1) 0%, rgba(0, 240, 255, 0.1) 100%);
+      border-top: 1px solid #9d4edd;
+    }
+
+    .mascot-footer img {
+      height: 80px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px #00f0ff);
+    }
+
+    footer {
+      background: #1a1f3a;
+      padding: 40px;
+      border-top: 2px solid #9d4edd;
+      color: #aaa;
+      margin-top: 60px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      margin-bottom: 40px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .footer-section h3 {
+      color: #00f0ff;
+      margin-bottom: 15px;
+      text-shadow: 0 0 5px #00f0ff;
+    }
+
+    .footer-section a {
+      display: block;
+      color: #aaa;
+      text-decoration: none;
+      margin: 8px 0;
+      transition: all 0.3s;
+    }
+
+    .footer-section a:hover {
+      color: #00f0ff;
+      text-shadow: 0 0 5px #00f0ff;
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #333;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+      color: #9d4edd;
+    }
+
+    .footer-bottom a {
+      color: #00f0ff;
+      text-decoration: none;
+      text-shadow: 0 0 3px #00f0ff;
+    }
+
+    .footer-bottom a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🎭 The App Cabana</h1>
-    <nav>
-      <a href="/">Home</a>
+  <!-- Nuddy Mascot Header -->
+  <div class="mascot-header">
+    <img src="/assets/cokoNuddy.png" alt="Nuddy Mascot - The App Cabana">
+  </div>
+
+  <!-- Navigation -->
+  <div class="navbar">
+    <div class="navbar-brand">🎭 The App Cabana</div>
+    <div class="navbar-links">
       <a href="/shop/browse?type=app">Apps</a>
       <a href="/shop/browse?type=music">Music</a>
       <a href="/shop/browse?type=art">Art</a>
@@ -66,72 +377,88 @@
         <a href="/auth/login">Login</a>
         <a href="/auth/register">Register</a>
       <% } %>
-    </nav>
-  </header>
-
+    </div>
+  </div>
+  
+  <!-- Hero Section -->
   <div class="hero">
-    <h2>Your Creative Store</h2>
-    <p>Discover amazing apps, music, and art from independent creators</p>
-    <a href="/shop/browse" class="btn">Explore Now</a>
+    <h1>🎭 The App Cabana</h1>
+    <p>Your creative marketplace for apps, music, and digital art</p>
+    <div class="cta-buttons">
+      <a href="/shop/browse" class="btn">Explore Products</a>
+      <a href="/auth/register" class="btn btn-secondary">Become a Seller</a>
+    </div>
   </div>
 
-  <!-- Trust Badges Section -->
-  <div class="trust-section">
-    <div class="trust-container">
-      <h3>🔒 Built with Trust</h3>
-      <div class="badges">
-        <div class="badge">
-          <img src="/assets/docker-badge.png" alt="Docker Powered" title="Backend Proudly Docker Powered">
-          <p>Docker<br>Powered</p>
+  <!-- Stats Section -->
+  <div class="stats-section">
+    <div class="stat-box">
+      <div class="stat-number"><%= stats.total_products %></div>
+      <div class="stat-label">Products Available</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number"><%= stats.total_downloads %></div>
+      <div class="stat-label">Total Downloads</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number"><%= stats.total_creators %></div>
+      <div class="stat-label">Independent Creators</div>
+    </div>
+  </div>
+
+  <!-- Featured Products -->
+  <section class="featured-section">
+    <h2 class="section-title">✨ Featured Products</h2>
+    <div class="products-grid">
+      <% if (products && products.length > 0) { %>
+        <% products.forEach(product => { %>
+          <div class="product-card">
+            <div class="product-image" onclick="window.location.href='/shop/product/<%= product.slug %>'">
+              <% if (product.cover_url) { %>
+                <img src="<%= product.cover_url %>" alt="<%= product.title %>">
+              <% } else { %>
+                <span style="color: #9d4edd;">📦</span>
+              <% } %>
+            </div>
+            <div class="product-info">
+              <div class="product-title" onclick="window.location.href='/shop/product/<%= product.slug %>'"><%= product.title.substring(0, 40) %><% if (product.title.length > 40) { %>...<% } %></div>
+              <div class="product-creator">by <%= product.creator || 'Unknown' %></div>
+              <div class="product-price">$<%= (product.price_cents / 100).toFixed(2) %></div>
+              <div class="product-rating">⭐ <%= product.avg_rating ? product.avg_rating.toFixed(1) : 'N/A' %> (<%= product.review_count || 0 %> reviews)</div>
+              
+              <% if (product.type === 'music' && product.preview_url) { %>
+                <div class="preview-player">
+                  <span class="preview-label">🎵 Listen to preview</span>
+                  <audio controls>
+                    <source src="<%= product.preview_url %>" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #00f0ff;">
+          <p style="font-size: 18px; margin-bottom: 20px;">No products yet. Check back soon!</p>
+          <a href="/auth/register" class="btn">Be the first seller</a>
         </div>
-        <div class="badge">
-          <img src="/assets/app-harbor-shield.png" alt="App Harbor Verified" title="Security Verified & Trusted">
-          <p>App Harbor<br>Verified</p>
-        </div>
-      </div>
-      <p class="trust-text">All apps are containerized, verified, and scanned for security.</p>
+      <% } %>
     </div>
-  </div>
+  </section>
 
-  <div class="stats">
-    <div class="stat">
-      <h3><%= stats.total_products %></h3>
-      <p>Products Available</p>
-    </div>
-    <div class="stat">
-      <h3><%= stats.total_downloads %></h3>
-      <p>Total Downloads</p>
-    </div>
-    <div class="stat">
-      <h3><%= stats.total_creators %></h3>
-      <p>Active Creators</p>
-    </div>
+  <!-- Nuddy Mascot Footer -->
+  <div class="mascot-footer">
+    <img src="/assets/cokoNuddy.png" alt="Nuddy Mascot">
   </div>
-
-  <h2 style="padding: 40px 40px 20px;">Featured</h2>
-  <div class="grid">
-    <% products.forEach(p => { %>
-      <div class="card">
-        <div style="background: #333; height: 180px; border-radius: 6px; margin-bottom: 15px;"></div>
-        <h3><%= p.title %></h3>
-        <p><%= p.description ? p.description.substring(0, 100) : 'No description' %></p>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span class="price">$<%= (p.price_cents / 100).toFixed(2) %></span>
-          <a href="/shop/product/<%= p.slug %>" class="btn" style="padding: 8px 15px; font-size: 14px;">View</a>
-        </div>
-      </div>
-    <% }) %>
-  </div>
-
+  
+  <!-- Footer -->
   <footer>
     <div class="footer-grid">
       <div class="footer-section">
-        <h3>🎭 The App Cabana</h3>
-        <p>Your creative marketplace for apps, music, and art.</p>
-        <a href="/contact">Contact Us</a>
-        <a href="/charity">Charity Initiative</a>
+        <h3>The App Cabana</h3>
+        <p>Your creative marketplace for apps, music, and digital art from independent creators.</p>
       </div>
-
       <div class="footer-section">
         <h3>Company</h3>
         <strong>MYM LOGIC LLC</strong>
@@ -139,28 +466,22 @@
         <a href="mailto:MYMLOGIC.LLC@OUTLOOK.COM">📧 MYMLOGIC.LLC@OUTLOOK.COM</a>
         <p style="margin-top: 10px; font-size: 12px;">Kennewick, WA 99336, USA</p>
       </div>
-
       <div class="footer-section">
         <h3>Quick Links</h3>
-        <a href="/submit">Submit Your Work</a>
-        <a href="/shop/browse">Browse All</a>
-        <a href="/contact">Get in Touch</a>
-        <a href="/charity">Support Charity</a>
+        <a href="/shop/browse">Browse Products</a>
+        <a href="/submit">Become a Seller</a>
+        <a href="/contact">Contact Us</a>
+        <a href="/charity">Charity</a>
       </div>
-
       <div class="footer-section">
         <h3>SE CUSTOMS</h3>
-        <div class="se-customs">
-          <h4>🎨 Brand Design & Consulting</h4>
-          <p style="font-size: 12px; margin-bottom: 10px;">Custom branding, graphics, and creative direction for your business.</p>
-          <a href="/contact?service=se-customs" style="color: #667eea; font-weight: bold;">Inquire About Services</a>
-        </div>
+        <p>Custom branding, graphics design, and creative consulting.</p>
+        <a href="/contact?service=se-customs">Inquire About Services</a>
       </div>
     </div>
-
     <div class="footer-bottom">
       <p>&copy; 2026 MYM LOGIC LLC. All rights reserved.</p>
-      <p style="font-size: 12px; margin-top: 10px;">The App Cabana - Supporting Independent Creators & <a href="/charity" style="color: #667eea;">The #7 Pencil Charity</a></p>
+      <p style="margin-top: 10px;">The App Cabana - Supporting Independent Creators & <a href="/charity">The #7 Pencil Charity</a></p>
     </div>
   </footer>
 </body>
