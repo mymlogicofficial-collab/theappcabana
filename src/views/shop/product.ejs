@@ -4,51 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= product.title %> - The App Cabana</title>
-  <script src="https://js.stripe.com/v3/"></script>
   <style>
     body { font-family: sans-serif; background: #0a0e27; color: #fff; }
     .container { max-width: 1000px; margin: 0 auto; padding: 40px; }
     .product-header { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
-    .product-image { background: #1a1f3a; height: 400px; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-    .product-image img { max-width: 100%; max-height: 100%; object-fit: cover; }
-    .product-image.empty { color: #666; }
+    .product-image { background: #1a1f3a; height: 400px; border-radius: 8px; }
     .product-info h1 { font-size: 32px; margin-bottom: 10px; }
     .product-meta { color: #aaa; margin-bottom: 20px; }
     .price { font-size: 24px; color: #667eea; font-weight: bold; margin: 20px 0; }
     .description { line-height: 1.6; margin-bottom: 30px; }
-    .btn { padding: 12px 30px; background: #667eea; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+    .btn { padding: 12px 30px; background: #667eea; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-right: 10px; }
     .btn:hover { background: #764ba2; }
-    .btn:disabled { background: #444; cursor: not-allowed; }
-    .preview-section { background: #1a1f3a; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #333; }
-    .preview-section h3 { margin-bottom: 15px; color: #667eea; }
-    audio { width: 100%; margin-bottom: 15px; }
+    .btn-secondary { background: transparent; border: 2px solid #667eea; color: #667eea; }
+    .btn-secondary:hover { background: #667eea; color: #fff; }
     .reviews { margin-top: 40px; }
     .review { background: #1a1f3a; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; }
     .stars { color: #667eea; }
     textarea { width: 100%; padding: 10px; background: #1a1f3a; border: 1px solid #333; color: #fff; border-radius: 4px; margin: 10px 0; }
-    .select { padding: 8px; margin: 10px 0; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px; }
-    .free-download { background: #28a745; }
-    .free-download:hover { background: #218838; }
-    .error { color: #ff6b6b; background: #2a1a1a; padding: 10px; border-radius: 4px; margin-bottom: 10px; }
+    
+    /* Modal styles */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
+    .modal.active { display: flex; align-items: center; justify-content: center; }
+    .modal-content { background: #1a1f3a; padding: 40px; border-radius: 8px; max-width: 500px; width: 90%; border: 2px solid #667eea; }
+    .modal-header { font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #667eea; }
+    .modal-close { float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa; }
+    .modal-close:hover { color: #fff; }
+    .merch-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+    .merch-btn { padding: 15px; background: #0a0e27; border: 1px solid #667eea; color: #667eea; border-radius: 4px; cursor: pointer; text-align: center; transition: all 0.3s; }
+    .merch-btn:hover { background: #667eea; color: #fff; }
+    .merch-btn.selected { background: #667eea; color: #fff; }
+    .sub-options { display: none; margin-top: 15px; }
+    .sub-options.active { display: block; }
+    .sub-option { padding: 8px; background: #0a0e27; border: 1px solid #333; color: #aaa; border-radius: 4px; margin-bottom: 8px; cursor: pointer; text-align: center; }
+    .sub-option:hover { border-color: #667eea; color: #667eea; }
   </style>
 </head>
 <body>
-  <%- include('../partials/navbar') %>
   <div class="container">
     <a href="/shop/browse" style="color: #667eea;">← Back to Browse</a>
 
     <div class="product-header">
-      <div class="product-image <%= product.cover_url || product.file_path ? '' : 'empty' %>">
-        <% if (product.cover_url) { %>
-          <img src="<%= product.cover_url %>" alt="<%= product.title %>">
-        <% } else if (product.preview_url) { %>
-          <img src="<%= product.preview_url %>" alt="<%= product.title %>">
-        <% } else if (product.file_path && (product.file_path.match(/\.(jpg|jpeg|png|gif|webp)$/i))) { %>
-          <img src="<%= product.file_path %>" alt="<%= product.title %>">
-        <% } else { %>
-          No Image Available
-        <% } %>
-      </div>
+      <div class="product-image"></div>
       <div class="product-info">
         <h1><%= product.title %></h1>
         <div class="product-meta">
@@ -57,88 +53,159 @@
         </div>
         
         <% if (product.type === 'music' && product.preview_url) { %>
-          <div class="preview-section">
-            <h3>Listen to Preview (20 seconds)</h3>
-            <audio controls>
+          <div style="background: #1a1f3a; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #333;">
+            <h3 style="margin-bottom: 15px; color: #667eea;">Listen to Preview (20 seconds)</h3>
+            <audio controls style="width: 100%;">
               <source src="<%= product.preview_url %>" type="audio/mpeg">
-              Your browser does not support the audio element.
             </audio>
           </div>
         <% } %>
 
-        <div class="price">
-          <% if (product.price_cents === 0) { %>
-            FREE
-          <% } else { %>
-            $<%= (product.price_cents / 100).toFixed(2) %>
-          <% } %>
-        </div>
+        <div class="price">$<%= (product.price_cents / 100).toFixed(2) %></div>
         <p class="description"><%= product.description %></p>
         
-        <div id="download-section">
-          <% if (product.price_cents === 0) { %>
-            <form action="/shop/download/<%= product.id %>" method="GET">
-              <button type="submit" class="btn free-download">Download Now</button>
-            </form>
-          <% } else { %>
-            <% if (typeof sessionStorage !== 'undefined' || true) { %>
-              <button type="button" class="btn" id="pay-btn" onclick="checkout('<%= product.id %>')">Pay & Download - $<%= (product.price_cents / 100).toFixed(2) %></button>
-            <% } else { %>
-              <p style="color: #aaa;"><a href="/auth/login" style="color: #667eea;">Login</a> to purchase</p>
-            <% } %>
-          <% } %>
+        <button class="btn" onclick="downloadProduct(<%= product.id %>)">Download Now</button>
+        <% if (product.type === 'art') { %>
+          <button class="btn btn-secondary" onclick="openMerchModal()">🛒 Looking for Physical Merch?</button>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Merch Modal -->
+    <div id="merchModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeMerchModal()">&times;</span>
+        <div class="modal-header">Get This Design on Physical Merch</div>
+        
+        <div class="merch-options">
+          <button class="merch-btn" onclick="selectMerch('hats')">👒 Hats</button>
+          <button class="merch-btn" onclick="selectMerch('shirts')">👕 Shirts</button>
+          <button class="merch-btn" onclick="selectMerch('stickers')">✨ Stickers</button>
+          <button class="merch-btn" onclick="selectMerch('mugs')">☕ Mugs</button>
+          <button class="merch-btn" onclick="selectMerch('blankets')">🛏️ Blankets</button>
+          <button class="merch-btn" onclick="selectMerch('sweaters')">🧶 Sweaters</button>
+        </div>
+
+        <!-- Hat Options -->
+        <div id="hats-options" class="sub-options">
+          <p style="margin-bottom: 10px; color: #aaa;">Styles:</p>
+          <div class="sub-option" onclick="goToPrintful('hats', 'trucker')">Trucker Cap</div>
+          <div class="sub-option" onclick="goToPrintful('hats', 'dad')">Worn Dad Cap</div>
+        </div>
+
+        <!-- Shirt Options -->
+        <div id="shirts-options" class="sub-options">
+          <p style="margin-bottom: 10px; color: #aaa;">Sizes: S, M, L, XL, 2XL, 3XL</p>
+          <div class="sub-option" onclick="goToPrintful('shirts', 'all')">All Sizes</div>
+        </div>
+
+        <!-- Sticker Options -->
+        <div id="stickers-options" class="sub-options">
+          <p style="margin-bottom: 10px; color: #aaa;">Sizes & Materials:</p>
+          <div class="sub-option" onclick="goToPrintful('stickers', '3x3-acrylic')">3x3 Acrylic</div>
+          <div class="sub-option" onclick="goToPrintful('stickers', '3x3-holographic')">3x3 Holographic</div>
+          <div class="sub-option" onclick="goToPrintful('stickers', '4x4-acrylic')">4x4 Acrylic</div>
+          <div class="sub-option" onclick="goToPrintful('stickers', '4x4-holographic')">4x4 Holographic</div>
+          <div class="sub-option" onclick="goToPrintful('stickers', '5x5-acrylic')">5x5 Acrylic</div>
+          <div class="sub-option" onclick="goToPrintful('stickers', '5x5-holographic')">5x5 Holographic</div>
+        </div>
+
+        <!-- Mug Options -->
+        <div id="mugs-options" class="sub-options">
+          <p style="margin-bottom: 10px; color: #aaa;">Colors:</p>
+          <div class="sub-option" onclick="goToPrintful('mugs', 'white')">White Mug</div>
+          <div class="sub-option" onclick="goToPrintful('mugs', 'grey')">Grey Mug</div>
+          <div class="sub-option" onclick="goToPrintful('mugs', 'maroon')">Maroon Mug</div>
+        </div>
+
+        <!-- Blanket Options -->
+        <div id="blankets-options" class="sub-options">
+          <div class="sub-option" onclick="goToPrintful('blankets', 'throw')">Throw Blanket</div>
+        </div>
+
+        <!-- Sweater Options -->
+        <div id="sweaters-options" class="sub-options">
+          <p style="margin-bottom: 10px; color: #aaa;">Sizes: S, M, L, XL, 2XL, 3XL</p>
+          <div class="sub-option" onclick="goToPrintful('sweaters', 'all')">All Sizes</div>
         </div>
       </div>
     </div>
 
+    <!-- Reviews Section -->
     <div class="reviews">
       <h2>Reviews</h2>
       
-      <% if (reviews && reviews.length > 0) { %>
-        <% reviews.forEach(r => { %>
-          <div class="review">
-            <div style="display: flex; justify-content: space-between;">
-              <strong><%= r.display_name %></strong>
-              <span class="stars">★ <%= r.rating %></span>
-            </div>
-            <p style="margin-top: 10px;"><%= r.comment %></p>
-          </div>
-        <% }) %>
+      <% if (user) { %>
+        <form method="POST" action="/api/review/<%= product.id %>" style="background: #1a1f3a; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+          <label>Rate this product:</label><br>
+          <select name="rating" style="padding: 8px; margin: 10px 0; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px;">
+            <option>5 - Excellent</option>
+            <option>4 - Good</option>
+            <option>3 - OK</option>
+            <option>2 - Poor</option>
+            <option>1 - Terrible</option>
+          </select>
+          <textarea name="comment" placeholder="Share your thoughts..." rows="4"></textarea>
+          <button type="submit" class="btn">Post Review</button>
+        </form>
       <% } else { %>
-        <p style="color: #aaa;">No reviews yet. Be the first to review!</p>
+        <p style="color: #aaa; margin-bottom: 20px;"><a href="/auth/login" style="color: #667eea;">Login</a> to leave a review</p>
       <% } %>
+
+      <% reviews.forEach(r => { %>
+        <div class="review">
+          <div style="display: flex; justify-content: space-between;">
+            <strong><%= r.display_name %></strong>
+            <span class="stars">★ <%= r.rating %></span>
+          </div>
+          <p style="margin-top: 10px;"><%= r.comment %></p>
+        </div>
+      <% }) %>
     </div>
   </div>
 
   <script>
-    async function checkout(productId) {
-      try {
-        const response = await fetch(`/shop/checkout/digital/${productId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (!response.ok) {
-          const error = await response.json();
-          alert('Error: ' + (error.error || 'Failed to create checkout session'));
-          return;
-        }
+    function openMerchModal() {
+      document.getElementById('merchModal').classList.add('active');
+    }
 
-        const data = await response.json();
-        const stripe = Stripe('<%= stripePublishableKey %>');
-        
-        // Redirect to Stripe checkout
-        const result = await stripe.redirectToCheckout({ sessionId: data.sessionId });
-        
-        if (result.error) {
-          alert('Error: ' + result.error.message);
-        }
-      } catch (err) {
-        console.error('Checkout error:', err);
-        alert('Error: ' + err.message);
+    function closeMerchModal() {
+      document.getElementById('merchModal').classList.remove('active');
+      document.querySelectorAll('.sub-options').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.merch-btn').forEach(el => el.classList.remove('selected'));
+    }
+
+    function selectMerch(type) {
+      document.querySelectorAll('.merch-btn').forEach(el => el.classList.remove('selected'));
+      event.target.classList.add('selected');
+      
+      document.querySelectorAll('.sub-options').forEach(el => el.classList.remove('active'));
+      const optionsId = type + '-options';
+      document.getElementById(optionsId).classList.add('active');
+    }
+
+    function goToPrintful(category, variant) {
+      const title = '<%= product.title %>';
+      const imageUrl = window.location.origin + '/uploads/merch/<%= product.slug %>-' + category + '.png';
+      
+      // Construct Printful store URL with design info
+      const printfulUrl = `https://printful.com/products/${category}?design=${encodeURIComponent(title)}&image=${encodeURIComponent(imageUrl)}`;
+      
+      window.open(printfulUrl, '_blank');
+      closeMerchModal();
+    }
+
+    function downloadProduct(productId) {
+      window.location.href = '/shop/download/' + productId;
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('merchModal');
+      if (event.target == modal) {
+        closeMerchModal();
       }
     }
   </script>
 </body>
 </html>
-

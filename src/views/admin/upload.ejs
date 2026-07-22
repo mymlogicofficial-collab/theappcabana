@@ -8,18 +8,20 @@
     body { font-family: sans-serif; background: #0a0e27; color: #fff; }
     .container { max-width: 600px; margin: 0 auto; padding: 40px; }
     .form { background: #1a1f3a; padding: 40px; border-radius: 8px; border: 1px solid #333; }
-    h1 { margin-bottom: 30px; }
+    h1 { margin-bottom: 30px; color: #667eea; }
     label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
-    input, select, textarea { width: 100%; padding: 10px; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px; margin-top: 5px; box-sizing: border-box; }
+    input, select, textarea { width: 100%; padding: 10px; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px; margin-top: 5px; }
+    textarea { resize: vertical; }
     button { width: 100%; margin-top: 20px; padding: 12px; background: #667eea; border: none; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px; }
     button:hover { background: #764ba2; }
     .error { color: #ff6b6b; margin-bottom: 20px; }
-    .preview { margin-top: 10px; max-width: 200px; border-radius: 4px; display: none; }
-    .form-group { margin-bottom: 20px; }
+    .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 15px; }
+    .checkbox-group input[type="checkbox"] { width: auto; margin: 0; }
+    .checkbox-group label { margin: 0; }
+    .info { color: #aaa; font-size: 12px; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <%- include('../partials/navbar') %>
   <div class="container">
     <div class="form">
       <h1>Upload New Product</h1>
@@ -27,61 +29,36 @@
         <div class="error"><%= error %></div>
       <% } %>
       <form method="POST" enctype="multipart/form-data">
-        <div class="form-group">
-          <label>Product Type *</label>
-          <select name="type" required>
-            <option>Select type...</option>
-            <option value="app">App</option>
-            <option value="music">Music</option>
-            <option value="art">Digital Art</option>
-          </select>
-        </div>
+        <label>Product Type *</label>
+        <select name="type" required>
+          <option>Select type...</option>
+          <option value="app">App</option>
+          <option value="music">Music</option>
+          <option value="art">Digital Art</option>
+        </select>
 
-        <div class="form-group">
-          <label>Title *</label>
-          <input type="text" name="title" required>
-        </div>
+        <label>Title *</label>
+        <input type="text" name="title" required>
 
-        <div class="form-group">
-          <label>Description</label>
-          <textarea name="description" rows="4"></textarea>
-        </div>
+        <label>Description</label>
+        <textarea name="description" rows="4"></textarea>
 
-        <div class="form-group">
-          <label>Price (USD) *</label>
-          <input type="number" name="price" step="0.01" min="0.99" required>
-        </div>
+        <label>Price (USD) *</label>
+        <input type="number" name="price" step="0.99" min="0" required>
 
-        <div class="form-group">
-          <label>Cover Image (JPG, PNG, GIF, WebP) *</label>
-          <input type="file" name="cover" accept="image/*" required onchange="previewImage(this)">
-          <img id="preview" class="preview" alt="Preview">
-        </div>
+        <label>File *</label>
+        <input type="file" name="file" required>
 
-        <div class="form-group">
-          <label>Product File *</label>
-          <input type="file" name="file" required>
-          <small style="color: #999;">ZIP, PDF, audio files, or any downloadable content</small>
+        <div class="checkbox-group">
+          <input type="checkbox" id="add_physical" name="add_to_physical" value="on">
+          <label for="add_physical">Add to Physical Merch Inventory</label>
         </div>
+        <p class="info">✓ Auto-resize image for stickers (3x3, 4x4, 5x5), shirts, hats, mugs, and blankets</p>
+        <p class="info">✓ Skip uploading the same image multiple times</p>
 
         <button type="submit">Upload Product</button>
       </form>
     </div>
   </div>
-
-  <script>
-    function previewImage(input) {
-      const preview = document.getElementById('preview');
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          preview.src = e.target.result;
-          preview.style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
-    }
-  </script>
 </body>
 </html>
-
