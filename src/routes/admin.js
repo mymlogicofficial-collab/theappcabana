@@ -102,7 +102,6 @@ router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
         console.log(`[ADMIN] Physical inventory created for product ${productId}`);
       } catch (err) {
         console.error(`[ADMIN] Failed to create physical variants:`, err.message);
-        // Don't fail upload if merch sync fails
       }
     }
 
@@ -110,6 +109,57 @@ router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
   } catch (err) {
     console.error(err);
     res.render('admin/upload', { error: 'Something went wrong: ' + err.message });
+  }
+});
+
+// Edit product
+router.get('/edit/:product_id', requireAuth, async (req, res) => {
+  try {
+    const product = await pool.query(
+      'SELECT * FROM products WHERE id = $1 AND user_id = $2',
+      [req.params.product_id, req.session.user.id]
+    );
+    
+    if (product.rows.length === 0) {
+      return res.status(404).render('error', { message: 'Product not found' });
+    }
+    
+    res.render('admin/edit', { product: product.rows[0], error: null });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('error', { message: 'Something went wrong' });
+  }
+});
+
+router.post('/edit/:product_id', requireAuth, upload.single('file'), async (req, res) => {
+  const { title, description, price } = req.body;
+  
+  try {
+    const product = await pool.query(
+      'SELECT * FROM products WHERE id = $1 AND user_id = $2',
+      [req.params.product_id, req.session.user.id]
+    );
+    
+    if (product.rows.length === 0) {
+      return res.status(404).render('error', { message: 'Product not found' });
+    }
+    
+    const price_cents = Math.round(parseFloat(price) * 100) || 0;
+    let filePath = product.rows[0].file_path;
+    
+    if (req.file) {
+      filePath = `/uploads/${req.file.filename}`;
+    }
+    
+    await pool.query(`
+      UPDATE products SET title = $1, description = $2, price_cents = $3, file_path = $4, updated_at = NOW()
+      WHERE id = $5 AND user_id = $6
+    `, [title, description, price_cents, filePath, req.params.product_id, req.session.user.id]);
+    
+    res.redirect('/admin/dashboard');
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('error', { message: 'Failed to update product' });
   }
 });
 

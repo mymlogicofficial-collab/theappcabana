@@ -5,144 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Product - The App Cabana</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #fff; }
-    .header { padding: 20px 40px; background: #1a1f3a; border-bottom: 1px solid #333; }
-    .back-btn { display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; font-weight: 500; margin-bottom: 20px; }
-    .back-btn:hover { color: #7c8ff7; }
-    .container { max-width: 700px; margin: 0 auto; padding: 40px 20px; }
+    body { font-family: sans-serif; background: #0a0e27; color: #fff; }
+    .container { max-width: 600px; margin: 0 auto; padding: 40px; }
     .form { background: #1a1f3a; padding: 40px; border-radius: 8px; border: 1px solid #333; }
-    h1 { margin-bottom: 30px; font-size: 28px; }
-    label { display: block; margin-top: 20px; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-    input, textarea, select { 
-      width: 100%; 
-      padding: 12px; 
-      background: #0a0e27; 
-      border: 1px solid #333; 
-      color: #fff; 
-      border-radius: 4px; 
-      font-family: inherit;
-      box-sizing: border-box;
-    }
-    input:focus, textarea:focus, select:focus { 
-      outline: none; 
-      border-color: #667eea; 
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-    textarea { resize: vertical; min-height: 120px; }
-    .preview-section { margin-top: 20px; padding: 12px; background: rgba(102, 126, 234, 0.05); border: 1px solid #333; border-radius: 4px; }
-    .preview-img { max-width: 300px; border-radius: 4px; margin-top: 10px; }
-    audio { width: 100%; margin-top: 10px; }
-    .buttons { display: flex; gap: 15px; margin-top: 30px; }
-    button { 
-      flex: 1; 
-      padding: 12px; 
-      border: none; 
-      border-radius: 4px; 
-      font-weight: 600; 
-      cursor: pointer; 
-      font-size: 15px;
-    }
-    .btn-save { background: #667eea; color: #fff; }
-    .btn-save:hover { background: #5568d3; }
-    .btn-cancel { background: #2a3050; color: #fff; }
-    .btn-cancel:hover { background: #3a4050; }
-    .error { color: #ff6b6b; margin-bottom: 20px; padding: 12px; background: rgba(255, 107, 107, 0.1); border-radius: 4px; }
-    .info { font-size: 13px; color: #999; margin-top: 5px; }
-    small { color: #999; font-size: 12px; }
-    .success { color: #28a745; font-size: 12px; }
-    .hidden { display: none; }
+    h1 { margin-bottom: 30px; color: #667eea; }
+    label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 10px; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px; margin-top: 5px; }
+    textarea { resize: vertical; }
+    button { width: 100%; margin-top: 20px; padding: 12px; background: #667eea; border: none; color: #fff; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #764ba2; }
+    .error { color: #ff6b6b; margin-bottom: 20px; }
+    .back-btn { color: #667eea; text-decoration: none; margin-bottom: 20px; display: inline-block; }
+    .back-btn:hover { color: #7c8ff7; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <a href="/admin/dashboard" class="back-btn">← Back to Dashboard</a>
-  </div>
-
   <div class="container">
+    <a href="/admin/dashboard" class="back-btn">← Back to Dashboard</a>
     <div class="form">
       <h1>Edit Product</h1>
-      
       <% if (error) { %>
         <div class="error"><%= error %></div>
       <% } %>
-
       <form method="POST" enctype="multipart/form-data">
-        <label>Product Type *</label>
-        <select name="type" required id="productType">
-          <option value="app" <%= product.type === 'app' ? 'selected' : '' %>>App</option>
-          <option value="music" <%= product.type === 'music' ? 'selected' : '' %>>Music</option>
-          <option value="art" <%= product.type === 'art' ? 'selected' : '' %>>Digital Art</option>
-          <option value="physical" <%= product.type === 'physical' ? 'selected' : '' %>>Physical Product</option>
-        </select>
+        <label>Product Type</label>
+        <input type="text" value="<%= product.type %>" disabled style="opacity: 0.6;">
 
         <label>Title *</label>
         <input type="text" name="title" value="<%= product.title %>" required>
 
         <label>Description</label>
-        <textarea name="description"><%= product.description || '' %></textarea>
+        <textarea name="description" rows="4"><%= product.description || '' %></textarea>
 
         <label>Price (USD) *</label>
-        <input type="number" name="price" step="0.01" min="0.99" value="<%= (product.price_cents / 100).toFixed(2) %>" required>
+        <input type="number" name="price" step="0.99" min="0" value="<%= (product.price_cents / 100).toFixed(2) %>" required>
 
-        <!-- Music File Upload (only for music products) -->
-        <div id="musicFileSection" class="<%= product.type === 'music' ? '' : 'hidden' %>">
-          <label>Music File</label>
-          <input type="file" name="file" accept="audio/*">
-          <small>Upload a new music file to regenerate the preview (20-second clip from middle of song)</small>
-          <% if (product.file_path) { %>
-            <div class="preview-section">
-              <p style="font-size: 13px; margin-bottom: 10px;">Current file: <strong><%= product.file_path.split('/').pop() %></strong></p>
-              <% if (product.preview_url) { %>
-                <p style="font-size: 12px; margin-bottom: 8px;">Preview (middle section):</p>
-                <audio controls>
-                  <source src="<%= product.preview_url %>" type="audio/mpeg">
-                  Your browser does not support the audio element.
-                </audio>
-              <% } %>
-            </div>
-          <% } %>
-        </div>
+        <label>Replace File (Optional)</label>
+        <input type="file" name="file">
+        <p style="color: #999; font-size: 12px; margin-top: 5px;">Leave blank to keep current file</p>
 
-        <% if (product.type !== 'physical') { %>
-          <label>Cover Image</label>
-          <input type="file" name="cover" accept="image/*">
-          <% if (product.cover_url) { %>
-            <div class="preview-section">
-              <p style="font-size: 13px; margin-bottom: 10px;">Current cover:</p>
-              <img src="<%= product.cover_url %>" alt="Cover" class="preview-img">
-            </div>
-          <% } %>
-          <small>Leave blank to keep current image</small>
-        <% } %>
-
-        <label>Featured *</label>
-        <select name="is_featured">
-          <option value="false" <%= !product.is_featured ? 'selected' : '' %>>No</option>
-          <option value="true" <%= product.is_featured ? 'selected' : '' %>>Yes</option>
-        </select>
-        <small>Featured products appear first in the store</small>
-
-        <div class="buttons">
-          <button type="submit" class="btn-save">Save Changes</button>
-          <a href="/admin/dashboard" class="btn-cancel" style="text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancel</a>
-        </div>
+        <button type="submit">Update Product</button>
       </form>
     </div>
   </div>
-
-  <script>
-    const productTypeSelect = document.getElementById('productType');
-    const musicFileSection = document.getElementById('musicFileSection');
-
-    productTypeSelect.addEventListener('change', (e) => {
-      if (e.target.value === 'music') {
-        musicFileSection.classList.remove('hidden');
-      } else {
-        musicFileSection.classList.add('hidden');
-      }
-    });
-  </script>
 </body>
 </html>
-
