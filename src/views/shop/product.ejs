@@ -171,6 +171,8 @@
   </div>
 
   <script>
+    const PRINTFUL_STORE = 'https://your-store.printful.com';
+
     function openMerchModal() {
       document.getElementById('merchModal').classList.add('active');
     }
@@ -194,10 +196,10 @@
       const title = '<%= product.title %>';
       const imageUrl = window.location.origin + '/uploads/merch/<%= product.slug %>-' + category + '.png';
       
-      // Construct Printful store URL with design info
-      const printfulUrl = `https://printful.com/products/${category}?design=${encodeURIComponent(title)}&image=${encodeURIComponent(imageUrl)}`;
+      // Go to Printful store with image params
+      const url = PRINTFUL_STORE + '?design=' + encodeURIComponent(title) + '&image=' + encodeURIComponent(imageUrl) + '&category=' + category + '&variant=' + variant;
       
-      window.open(printfulUrl, '_blank');
+      window.open(url, '_blank');
       closeMerchModal();
     }
 
