@@ -5,6 +5,7 @@ const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
 const { pool } = require('../db');
 const { resizeAllMerchVariants } = require('../utils/image-resize');
+const { createPrintfulProductsForMerch } = require('../utils/printful-api');
 
 const router = express.Router();
 
@@ -90,19 +91,31 @@ router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
     
     const productId = result.rows[0].id;
 
-    // Auto-resize and sync to physical inventory if requested and image type
+    // Auto-resize and sync to physical inventory + Printful if requested and image type
     if (add_to_physical === 'on' && (type === 'art' || req.file.mimetype.includes('image'))) {
       try {
         const merchVariants = await resizeAllMerchVariants(req.file.path);
         
+        // Create Printful products
+        let printfulProducts = {};
+        if (process.env.PRINTFUL_API_KEY) {
+          try {
+            printfulProducts = await createPrintfulProductsForMerch(req.file.path, title);
+            console.log(`[ADMIN] Created Printful products:`, printfulProducts);
+          } catch (err) {
+            console.warn(`[ADMIN] Printful sync failed (non-critical):`, err.message);
+          }
+        }
+        
         await pool.query(`
-          INSERT INTO physical_products (product_id, selected_variants, sync_status)
-          VALUES ($1, $2, $3)
-          ON CONFLICT (product_id) DO UPDATE SET selected_variants = $2, sync_status = $3
+          INSERT INTO physical_products (product_id, selected_variants, sync_status, printful_category)
+          VALUES ($1, $2, $3, $4)
+          ON CONFLICT (product_id) DO UPDATE SET selected_variants = $2, sync_status = $3, printful_category = $4
         `, [
           productId,
           JSON.stringify(merchVariants),
-          'ready'
+          'ready',
+          JSON.stringify(printfulProducts)
         ]);
         
         console.log(`[ADMIN] Physical inventory created for product ${productId}`);
