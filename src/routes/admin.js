@@ -56,6 +56,12 @@ router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
     const price_cents = Math.round(parseFloat(price) * 100) || 0;
     const filePath = `/uploads/${req.file.filename}`;
     let previewUrl = null;
+    let coverUrl = null;
+
+    // For images (art), use as cover
+    if (type === 'art' || req.file.mimetype.includes('image')) {
+      coverUrl = filePath;
+    }
 
     // Generate 20-second preview for music files
     if (type === 'music' && (req.file.mimetype.includes('audio') || req.file.originalname.endsWith('.mp3'))) {
@@ -77,10 +83,10 @@ router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
 
     // Create product
     const result = await pool.query(`
-      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, preview_url, is_approved)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, preview_url, cover_url, is_approved)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true)
       RETURNING id, slug
-    `, [req.session.user.id, type, title, slug, description, price_cents, filePath, previewUrl]);
+    `, [req.session.user.id, type, title, slug, description, price_cents, filePath, previewUrl, coverUrl]);
     
     const productId = result.rows[0].id;
 
@@ -146,15 +152,17 @@ router.post('/edit/:product_id', requireAuth, upload.single('file'), async (req,
     
     const price_cents = Math.round(parseFloat(price) * 100) || 0;
     let filePath = product.rows[0].file_path;
+    let coverUrl = product.rows[0].cover_url;
     
     if (req.file) {
       filePath = `/uploads/${req.file.filename}`;
+      coverUrl = filePath;
     }
     
     await pool.query(`
-      UPDATE products SET title = $1, description = $2, price_cents = $3, file_path = $4, updated_at = NOW()
-      WHERE id = $5 AND user_id = $6
-    `, [title, description, price_cents, filePath, req.params.product_id, req.session.user.id]);
+      UPDATE products SET title = $1, description = $2, price_cents = $3, file_path = $4, cover_url = $5, updated_at = NOW()
+      WHERE id = $6 AND user_id = $7
+    `, [title, description, price_cents, filePath, coverUrl, req.params.product_id, req.session.user.id]);
     
     res.redirect('/admin/dashboard');
   } catch (err) {
