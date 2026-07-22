@@ -1,0 +1,106 @@
+<!-- Trust Badges Section - Add to homepage after hero section -->
+
+<div class="trust-section">
+  <div class="trust-container">
+    <h3>🔒 Built with Trust</h3>
+    
+    <div class="badges">
+      <div class="badge">
+        <img src="/assets/docker-badge.png" alt="Backend Proudly Docker Powered" title="Backend Proudly Docker Powered">
+        <p>Docker<br>Powered</p>
+      </div>
+      
+      <div class="badge">
+        <img src="/assets/app-harbor-shield.png" alt="App Harbor Security Verified" title="App Harbor Security Verified">
+        <p>Security<br>Verified</p>
+      </div>
+      
+      <div class="badge">
+        <span class="custom-badge">🔐</span>
+        <p>SSL<br>Encrypted</p>
+      </div>
+      
+      <div class="badge">
+        <span class="custom-badge">✅</span>
+        <p>Malware<br>Free</p>
+      </div>
+    </div>
+    
+    <p class="trust-text">All apps are containerized, verified, and scanned for security.</p>
+  </div>
+</div>
+
+<style>
+.trust-section {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  padding: 60px 40px;
+  margin: 40px 0;
+  border-top: 1px solid rgba(102, 126, 234, 0.3);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.trust-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.trust-container h3 {
+  font-size: 24px;
+  color: #667eea;
+  margin-bottom: 30px;
+  font-weight: bold;
+}
+
+.badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  transition: transform 0.3s;
+}
+
+.badge img:hover {
+  transform: scale(1.1);
+}
+
+.badge .custom-badge {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+}
+
+.badge p {
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.trust-text {
+  color: #999;
+  font-size: 14px;
+  margin-top: 20px;
+}
+</style>
