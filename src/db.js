@@ -170,9 +170,154 @@ async function initDatabase() {
       console.warn('Note: Admin user setup might have already run:', err.message);
     }
 
+    // AUTO SEED DATA - Only runs if database is empty
+    await seedTestData();
+
     console.log('Database initialized successfully');
   } catch (err) {
     console.error('Database init error:', err.message);
+  }
+}
+
+async function seedTestData() {
+  try {
+    const userCount = await pool.query('SELECT COUNT(*) FROM users');
+    
+    // Only seed if database is empty
+    if (parseInt(userCount.rows[0].count) > 1) {
+      console.log('[Seed] Database already has data, skipping seed');
+      return;
+    }
+
+    console.log('[Seed] Populating test data...');
+
+    // Create test users
+    await pool.query(`
+      INSERT INTO users (username, email, password_hash, display_name, is_admin, created_at)
+      VALUES 
+        ('dj_beats', 'dj@theappcabana.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5YGIOQYs8dHha', 'DJ Beats', false, NOW()),
+        ('pixel_artist', 'pixel@theappcabana.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5YGIOQYs8dHha', 'Pixel Artist', false, NOW()),
+        ('dev_studio', 'dev@theappcabana.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5YGIOQYs8dHha', 'Dev Studio', false, NOW()),
+        ('ambient_sounds', 'ambient@theappcabana.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5YGIOQYs8dHha', 'Ambient Sounds', false, NOW())
+      ON CONFLICT(email) DO NOTHING
+    `);
+
+    // Create products
+    await pool.query(`
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, preview_url, download_count, is_featured, is_approved, created_at)
+      SELECT 
+        (SELECT id FROM users WHERE email = 'dj@theappcabana.com'), 'music', 
+        'Midnight Vibes - Lo-Fi Hip Hop', 'midnight-vibes-lofi-hiphop', 
+        'Chill lo-fi hip hop beat perfect for studying or relaxing.', 
+        99, '/uploads/midnight-vibes.mp3', '/uploads/midnight-vibes-cover.jpg', 
+        '/uploads/preview-midnight-vibes.mp3', 127, true, true, NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM products WHERE slug = 'midnight-vibes-lofi-hiphop')
+    `);
+
+    await pool.query(`
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, preview_url, download_count, is_featured, is_approved, created_at)
+      SELECT 
+        (SELECT id FROM users WHERE email = 'dj@theappcabana.com'), 'music', 
+        'Neon Dreams - Synthwave', 'neon-dreams-synthwave', 
+        'A synthwave masterpiece with 80s aesthetic and modern production.', 
+        99, '/uploads/neon-dreams.mp3', '/uploads/neon-dreams-cover.jpg', 
+        '/uploads/preview-neon-dreams.mp3', 89, true, true, NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM products WHERE slug = 'neon-dreams-synthwave')
+    `);
+
+    await pool.query(`
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, preview_url, download_count, is_featured, is_approved, created_at)
+      SELECT 
+        (SELECT id FROM users WHERE email = 'ambient@theappcabana.com'), 'music', 
+        'Forest Meditation - Ambient', 'forest-meditation-ambient', 
+        'Peaceful ambient soundscape featuring natural forest sounds and gentle piano.', 
+        99, '/uploads/forest-meditation.mp3', '/uploads/forest-meditation-cover.jpg', 
+        '/uploads/preview-forest-meditation.mp3', 243, true, true, NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM products WHERE slug = 'forest-meditation-ambient')
+    `);
+
+    await pool.query(`
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, download_count, is_featured, is_approved, created_at)
+      SELECT 
+        (SELECT id FROM users WHERE email = 'pixel@theappcabana.com'), 'art', 
+        'Retro Pixel Art Bundle - 16 Assets', 'retro-pixel-art-bundle-16-assets', 
+        'Complete set of retro pixel art assets for indie games and projects.', 
+        1499, '/uploads/pixel-art-bundle.zip', '/uploads/pixel-art-thumb.jpg', 45, true, true, NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM products WHERE slug = 'retro-pixel-art-bundle-16-assets')
+    `);
+
+    await pool.query(`
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, download_count, is_featured, is_approved, created_at)
+      SELECT 
+        (SELECT id FROM users WHERE email = 'pixel@theappcabana.com'), 'art', 
+        'Abstract Watercolor Textures - 20 PNGs', 'abstract-watercolor-textures-20', 
+        'High-resolution watercolor texture pack with 20 unique abstract backgrounds.', 
+        899, '/uploads/watercolor-textures.zip', '/uploads/watercolor-thumb.jpg', 67, false, true, NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM products WHERE slug = 'abstract-watercolor-textures-20')
+    `);
+
+    await pool.query(`
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, download_count, is_featured, is_approved, created_at)
+      SELECT 
+        (SELECT id FROM users WHERE email = 'pixel@theappcabana.com'), 'art', 
+        'Cyberpunk UI Kit - Figma File', 'cyberpunk-ui-kit-figma', 
+        'Complete UI kit with 150+ components. Fully editable in Figma.', 
+        2499, '/uploads/cyberpunk-ui-kit.fig', '/uploads/cyberpunk-ui-thumb.jpg', 34, true, true, NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM products WHERE slug = 'cyberpunk-ui-kit-figma')
+    `);
+
+    await pool.query(`
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, download_count, is_featured, is_approved, created_at)
+      SELECT 
+        (SELECT id FROM users WHERE email = 'dev@theappcabana.com'), 'app', 
+        'Budget Tracker Pro - Windows', 'budget-tracker-pro-windows', 
+        'Lightweight desktop app for managing your personal budget.', 
+        1999, '/uploads/budget-tracker-pro.exe', '/uploads/budget-tracker-thumb.jpg', 156, true, true, NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM products WHERE slug = 'budget-tracker-pro-windows')
+    `);
+
+    await pool.query(`
+      INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, download_count, is_featured, is_approved, created_at)
+      SELECT 
+        (SELECT id FROM users WHERE email = 'dev@theappcabana.com'), 'app', 
+        'Pomodoro Timer - Multi-Platform', 'pomodoro-timer-multi-platform', 
+        'Simple and elegant Pomodoro timer for Windows, Mac, and Linux.', 
+        99, '/uploads/pomodoro-timer.zip', '/uploads/pomodoro-thumb.jpg', 298, true, true, NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM products WHERE slug = 'pomodoro-timer-multi-platform')
+    `);
+
+    // Add reviews
+    await pool.query(`
+      INSERT INTO reviews (product_id, user_id, rating, comment, created_at)
+      SELECT p.id, 2, 5, 'Amazing lo-fi beats! Perfect for studying.', NOW() - interval '30 days'
+      FROM products p WHERE p.slug = 'midnight-vibes-lofi-hiphop' 
+      AND NOT EXISTS (SELECT 1 FROM reviews WHERE product_id = p.id AND user_id = 2)
+    `);
+
+    await pool.query(`
+      INSERT INTO reviews (product_id, user_id, rating, comment, created_at)
+      SELECT p.id, 3, 5, 'Great quality, exactly what I was looking for!', NOW() - interval '25 days'
+      FROM products p WHERE p.slug = 'midnight-vibes-lofi-hiphop'
+      AND NOT EXISTS (SELECT 1 FROM reviews WHERE product_id = p.id AND user_id = 3)
+    `);
+
+    await pool.query(`
+      INSERT INTO reviews (product_id, user_id, rating, comment, created_at)
+      SELECT p.id, 2, 5, 'Love this app! Makes budgeting so easy.', NOW() - interval '3 days'
+      FROM products p WHERE p.slug = 'budget-tracker-pro-windows'
+      AND NOT EXISTS (SELECT 1 FROM reviews WHERE product_id = p.id AND user_id = 2)
+    `);
+
+    await pool.query(`
+      INSERT INTO reviews (product_id, user_id, rating, comment, created_at)
+      SELECT p.id, 3, 5, 'Pomodoro timer works perfectly!', NOW() - interval '2 days'
+      FROM products p WHERE p.slug = 'pomodoro-timer-multi-platform'
+      AND NOT EXISTS (SELECT 1 FROM reviews WHERE product_id = p.id AND user_id = 3)
+    `);
+
+    console.log('[Seed] Test data populated successfully!');
+  } catch (err) {
+    console.warn('[Seed] Seed data error (this is ok if data already exists):', err.message);
   }
 }
 
