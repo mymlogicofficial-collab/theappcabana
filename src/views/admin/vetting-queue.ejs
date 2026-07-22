@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vetting Queue - The App Cabana Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #fff; }
+    .header { padding: 20px 40px; background: #1a1f3a; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+    h1 { font-size: 24px; }
+    .stats { display: flex; gap: 20px; font-size: 14px; }
+    .stat { background: #2a2f48; padding: 10px 15px; border-radius: 4px; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+    .filters { display: flex; gap: 10px; margin-bottom: 30px; }
+    .btn-filter { padding: 8px 16px; background: #2a2f48; color: #667eea; border: 1px solid #333; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+    .btn-filter.active { background: #667eea; color: #fff; }
+    .btn-filter:hover { border-color: #667eea; }
+    .products-list { display: grid; gap: 20px; }
+    .product-card { background: #1a1f3a; border: 1px solid #333; border-radius: 8px; padding: 20px; }
+    .product-header { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: start; margin-bottom: 15px; }
+    .product-cover { width: 80px; height: 80px; background: #0a0e27; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+    .product-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .product-meta h3 { margin-bottom: 5px; font-size: 16px; }
+    .product-type { display: inline-block; background: rgba(102, 126, 234, 0.2); color: #667eea; padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+    .creator-info { font-size: 13px; color: #aaa; }
+    .creator-info strong { color: #fff; }
+    .price { font-size: 14px; color: #28a745; font-weight: 600; }
+    .submitted { font-size: 12px; color: #999; }
+    .product-description { color: #aaa; font-size: 13px; margin: 15px 0; line-height: 1.5; }
+    .product-actions { display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; }
+    .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.3s; }
+    .btn-approve { background: #28a745; color: #fff; }
+    .btn-approve:hover { background: #218838; }
+    .btn-reject { background: #dc3545; color: #fff; }
+    .btn-reject:hover { background: #c82333; }
+    .btn-view { background: #2a2f48; color: #667eea; }
+    .btn-view:hover { background: #3a3f58; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
+    .empty-icon { font-size: 48px; margin-bottom: 20px; }
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .status-pending { background: rgba(255, 193, 7, 0.1); color: #ffc107; }
+    .status-approved { background: rgba(40, 167, 69, 0.1); color: #28a745; }
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: #1a1f3a; padding: 30px; border-radius: 8px; max-width: 400px; border: 1px solid #333; }
+    .modal-title { font-size: 18px; margin-bottom: 15px; }
+    .modal-input { width: 100%; padding: 12px; background: #0a0e27; border: 1px solid #333; color: #fff; border-radius: 4px; margin-bottom: 15px; font-family: inherit; }
+    .modal-buttons { display: flex; gap: 10px; }
+    .modal-buttons button { flex: 1; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>⚙️ Vetting Queue</h1>
+    <div class="stats">
+      <div class="stat">
+        <span class="status-badge status-pending"><%= pending.length %> Pending Review</span>
+      </div>
+      <div class="stat">
+        <span class="status-badge status-approved"><%= approvedCount %> Approved</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <% if (pending.length === 0) { %>
+      <div class="empty-state">
+        <div class="empty-icon">✨</div>
+        <h2>No pending products</h2>
+        <p>All submissions have been reviewed. Great job!</p>
+      </div>
+    <% } else { %>
+      <div class="products-list">
+        <% pending.forEach(product => { %>
+          <div class="product-card">
+            <div class="product-header">
+              <div class="product-cover">
+                <% if (product.cover_url) { %>
+                  <img src="<%= product.cover_url %>" alt="<%= product.title %>">
+                <% } else { %>
+                  <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: #2a2f48; color: #666;">N/A</div>
+                <% } %>
+              </div>
+              <div class="product-meta">
+                <span class="product-type"><%= product.type.toUpperCase() %></span>
+                <h3><%= product.title %></h3>
+                <div class="creator-info">
+                  By <strong><%= product.display_name %></strong> (<%= product.email %>)
+                </div>
+                <div class="submitted">
+                  Submitted <%= new Date(product.created_at).toLocaleDateString() %>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div class="price">$<%= (product.price_cents / 100).toFixed(2) %></div>
+                <span class="status-badge status-pending" style="margin-top: 5px; display: block;">PENDING</span>
+              </div>
+            </div>
+
+            <% if (product.description) { %>
+              <div class="product-description">
+                "<%= product.description.substring(0, 200) %><%= product.description.length > 200 ? '...' : '' %>"
+              </div>
+            <% } %>
+
+            <div class="product-actions">
+              <button class="btn btn-approve" onclick="approveProduct(<%= product.id %>, '<%= product.title.replace(/'/g, "\\'") %>')">
+                ✓ Approve
+              </button>
+              <button class="btn btn-reject" onclick="openRejectModal(<%= product.id %>, '<%= product.title.replace(/'/g, "\\'") %>')">
+                ✗ Reject
+              </button>
+              <a href="/shop/product/<%= product.slug %>" class="btn btn-view" target="_blank">
+                👁 Preview
+              </a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Reject Modal -->
+  <div class="modal" id="rejectModal">
+    <div class="modal-content">
+      <div class="modal-title">Reject Product</div>
+      <p style="color: #aaa; margin-bottom: 15px; font-size: 13px;">
+        Product will be deleted. Optionally leave feedback for the creator:
+      </p>
+      <textarea id="rejectReason" class="modal-input" placeholder="Optional feedback..." rows="4"></textarea>
+      <div class="modal-buttons">
+        <button style="background: #2a2f48; color: #aaa;" onclick="closeRejectModal()">Cancel</button>
+        <button style="background: #dc3545; color: #fff;" onclick="confirmReject()">Delete Product</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let rejectingProductId = null;
+
+    function approveProduct(id, title) {
+      if (!confirm(`Approve "${title}"?`)) return;
+      
+      fetch(`/admin/approve/${id}`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            alert('✓ Product approved!');
+            location.reload();
+          } else {
+            alert('Error: ' + data.error);
+          }
+        })
+        .catch(err => alert('Error: ' + err.message));
+    }
+
+    function openRejectModal(id, title) {
+      rejectingProductId = id;
+      document.getElementById('rejectModal').classList.add('active');
+      document.getElementById('rejectReason').value = '';
+    }
+
+    function closeRejectModal() {
+      rejectingProductId = null;
+      document.getElementById('rejectModal').classList.remove('active');
+    }
+
+    function confirmReject() {
+      if (!rejectingProductId) return;
+      const reason = document.getElementById('rejectReason').value;
+      
+      fetch(`/admin/reject/${rejectingProductId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            alert('✓ Product rejected and deleted');
+            location.reload();
+          } else {
+            alert('Error: ' + data.error);
+          }
+        })
+        .catch(err => alert('Error: ' + err.message));
+    }
+  </script>
+</body>
+</html>
+
