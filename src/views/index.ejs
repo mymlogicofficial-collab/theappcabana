@@ -70,150 +70,88 @@
     }
     
     .btn:hover { background: #764ba2; }
-    .btn-secondary { background: transparent; border: 2px solid #667eea; }
-    .btn-secondary:hover { background: rgba(102, 126, 234, 0.1); }
-    
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 20px;
-      margin: 40px 0;
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    
-    .stat-box {
-      background: rgba(26, 31, 58, 0.8);
-      padding: 20px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      text-align: center;
-    }
-    
-    .stat-number { font-size: 2rem; color: #667eea; font-weight: bold; }
-    .stat-label { color: #aaa; font-size: 0.9rem; margin-top: 5px; }
-    
-    .featured-section {
-      max-width: 1200px;
-      margin: 60px auto;
-      padding: 0 20px;
-    }
-    
-    .section-title {
-      font-size: 2rem;
-      margin-bottom: 30px;
-      text-align: center;
-    }
-    
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 25px;
-    }
-    
-    .product-card {
-      background: rgba(26, 31, 58, 0.6);
-      border: 1px solid #333;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: 0.3s;
-    }
-    
-    .product-card:hover {
-      transform: translateY(-5px);
-      border-color: #667eea;
-      background: rgba(26, 31, 58, 0.9);
-    }
-    
-    .product-image {
-      width: 100%;
-      height: 200px;
-      background: rgba(102, 126, 234, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #666;
-      overflow: hidden;
-      cursor: pointer;
-    }
-    
-    .product-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    
-    .product-info {
-      padding: 20px;
-    }
-    
-    .product-title { font-weight: bold; margin-bottom: 8px; }
-    .product-creator { color: #aaa; font-size: 0.9rem; margin-bottom: 10px; }
-    .product-price { color: #667eea; font-weight: bold; font-size: 1.2rem; }
-    .product-rating { color: #ffc107; font-size: 0.9rem; margin-top: 8px; }
-    
-    .preview-player {
-      background: rgba(102, 126, 234, 0.1);
-      padding: 12px;
-      margin-top: 12px;
-      border-radius: 6px;
-      border: 1px solid #333;
-    }
-    
-    .preview-label {
-      font-size: 0.8rem;
-      color: #aaa;
-      margin-bottom: 8px;
-      display: block;
-    }
-    
-    audio {
-      width: 100%;
-      height: 30px;
-    }
-    
-    footer {
-      background: rgba(10, 14, 39, 0.95);
-      border-top: 1px solid #333;
-      padding: 40px 20px;
-      margin-top: 60px;
-    }
-    
-    .footer-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 30px;
-      max-width: 1200px;
-      margin: 0 auto;
-      margin-bottom: 30px;
-    }
-    
-    .footer-section h3 { margin-bottom: 15px; color: #667eea; }
-    .footer-section a { color: #00ff88; text-decoration: none; display: block; margin-bottom: 10px; font-size: 0.9rem; }
-    .footer-section a:hover { color: #667eea; }
-    
-    .footer-bottom {
-      text-align: center;
-      padding-top: 20px;
-      border-top: 1px solid #333;
-      color: #aaa;
-      font-size: 0.9rem;
-    }
-    
-    .footer-bottom a { color: #667eea; text-decoration: none; }
-    .footer-bottom a:hover { text-decoration: underline; }
+    .trust-section { background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); padding: 60px 40px; margin: 40px 0; border-top: 1px solid rgba(102, 126, 234, 0.3); border-bottom: 1px solid rgba(102, 126, 234, 0.3); }
+    .trust-container { max-width: 1200px; margin: 0 auto; text-align: center; }
+    .trust-container h3 { font-size: 24px; color: #667eea; margin-bottom: 30px; font-weight: bold; }
+    .badges { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 30px; margin-bottom: 20px; }
+    .badge { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .badge img { width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); transition: transform 0.3s; }
+    .badge img:hover { transform: scale(1.1); }
+    .badge p { font-size: 12px; color: #666; font-weight: 600; margin: 0; line-height: 1.3; }
+    .trust-text { color: #999; font-size: 14px; margin-top: 20px; }
+    .stats { display: flex; justify-content: center; gap: 60px; padding: 40px; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat h3 { font-size: 32px; color: #667eea; margin-bottom: 10px; }
+    .stat p { color: #aaa; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 40px; }
+    .card { background: #1a1f3a; padding: 20px; border-radius: 8px; border: 1px solid #333; transition: transform 0.3s; }
+    .card:hover { transform: translateY(-5px); }
+    .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; }
+    .card h3 { margin-bottom: 10px; }
+    .card p { color: #aaa; font-size: 14px; margin-bottom: 15px; }
+    .price { color: #667eea; font-weight: bold; font-size: 18px; }
+    footer { background: #1a1f3a; padding: 40px; border-top: 1px solid #333; color: #aaa; }
+    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px; }
+    .footer-section h3 { color: #667eea; margin-bottom: 15px; }
+    .footer-section a { display: block; color: #aaa; text-decoration: none; margin: 8px 0; }
+    .footer-section a:hover { color: #fff; }
+    .se-customs { background: #0a0e27; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0; }
+    .se-customs h4 { color: #667eea; margin-bottom: 10px; }
+    .footer-bottom { text-align: center; padding-top: 20px; border-top: 1px solid #333; }
+    .charity-badge { background: #667eea; padding: 10px 15px; border-radius: 4px; display: inline-block; margin: 10px 0; }
   </style>
 </head>
 <body>
   <%- include('partials/navbar') %>
   
   <header>
-    <h1>The App Cabana</h1>
-    <p class="tagline">Your creative marketplace for digital products & merchandise</p>
-    <div class="cta-buttons">
-      <a href="/shop/browse" class="btn">Browse Products</a>
-      <a href="/auth/register" class="btn btn-secondary">Become a Seller</a>
+    <h1>🎭 The App Cabana</h1>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/shop/browse?type=app">Apps</a>
+      <a href="/shop/browse?type=music">Music</a>
+      <a href="/shop/browse?type=art">Art</a>
+      <a href="/submit">Submit</a>
+      <a href="/contact">Contact</a>
+      <a href="/charity">Charity</a>
+      <% if (user) { %>
+        <a href="/admin/dashboard">Dashboard</a>
+        <a href="/auth/logout">Logout</a>
+      <% } else { %>
+        <a href="/auth/login">Login</a>
+        <a href="/auth/register">Register</a>
+      <% } %>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <h2>Your Creative Store</h2>
+    <p>Discover amazing apps, music, and art from independent creators</p>
+    <a href="/shop/browse" class="btn">Explore Now</a>
+  </div>
+
+  <!-- Trust Badges Section -->
+  <div class="trust-section">
+    <div class="trust-container">
+      <h3>🔒 Built with Trust</h3>
+      <div class="badges">
+        <div class="badge">
+          <img src="/assets/docker-badge.png" alt="Docker Powered" title="Backend Proudly Docker Powered">
+          <p>Docker<br>Powered</p>
+        </div>
+        <div class="badge">
+          <img src="/assets/app-harbor-shield.png" alt="App Harbor Verified" title="Security Verified & Trusted">
+          <p>App Harbor<br>Verified</p>
+        </div>
+      </div>
+      <p class="trust-text">All apps are containerized, verified, and scanned for security.</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <h3><%= stats.total_products %></h3>
+      <p>Products Available</p>
     </div>
     
     <div class="stats">
