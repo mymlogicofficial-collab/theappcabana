@@ -1,7 +1,4 @@
 const axios = require('axios');
-const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
 
 const PRINTFUL_API_KEY = process.env.PRINTFUL_API_KEY;
 const PRINTFUL_API_BASE = 'https://api.printful.com';
@@ -18,27 +15,7 @@ const PRODUCT_MAPPING = {
   'sweater': { printful_id: 10, name: 'Sweatshirt' }
 };
 
-async function uploadDesignToPrintful(imagePath, designName) {
-  try {
-    const formData = new FormData();
-    formData.append('file', fs.createReadStream(imagePath));
-    formData.append('filename', path.basename(imagePath));
-
-    const response = await axios.post(`${PRINTFUL_API_BASE}/files`, formData, {
-      headers: {
-        ...formData.getHeaders(),
-        'Authorization': `Bearer ${PRINTFUL_API_KEY}`
-      }
-    });
-
-    return response.data.result.id;
-  } catch (err) {
-    console.error('[Printful] Failed to upload design:', err.message);
-    throw err;
-  }
-}
-
-async function createPrintfulProduct(designFileId, productType, productName) {
+async function createPrintfulProduct(imageUrl, productType, productName) {
   try {
     const productInfo = PRODUCT_MAPPING[productType];
     if (!productInfo) {
@@ -48,17 +25,22 @@ async function createPrintfulProduct(designFileId, productType, productName) {
     const payload = {
       external_id: `${productName}-${productType}-${Date.now()}`,
       name: `${productName} - ${productInfo.name}`,
-      product_id: productInfo.printful_id,
       variants: [
         {
-          external_id: `${productType}-var-1`,
+          name: productInfo.name,
+          sku: `${productName}-${productType}`,
           product_id: productInfo.printful_id,
-          files: [
-            {
+          print_areas: {
+            front: {
               type: 'default',
-              url: designFileId // or upload_file_id if using file ID
+              images: [
+                {
+                  url: imageUrl,
+                  placement: 'front'
+                }
+              ]
             }
-          ]
+          }
         }
       ]
     };
@@ -72,27 +54,26 @@ async function createPrintfulProduct(designFileId, productType, productName) {
 
     return response.data.result;
   } catch (err) {
-    console.error('[Printful] Failed to create product:', err.message);
+    console.error(`[Printful] Failed to create ${productType} product:`, err.response?.data || err.message);
     throw err;
   }
 }
 
-async function createPrintfulProductsForMerch(imagePath, productName) {
+async function createPrintfulProductsForMerch(imageUrl, productName, baseUrl) {
   try {
     const results = {};
     
-    // Upload design once
-    const designFileId = await uploadDesignToPrintful(imagePath, productName);
-    console.log(`[Printful] Uploaded design: ${designFileId}`);
-
     // Create Printful product for each merch type
     for (const [key, info] of Object.entries(PRODUCT_MAPPING)) {
       try {
-        const product = await createPrintfulProduct(designFileId, key, productName);
+        // Use the resized image URL from your server
+        const fullImageUrl = `${baseUrl}/uploads/merch/${productName.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${key}.png`;
+        
+        const product = await createPrintfulProduct(fullImageUrl, key, productName);
         results[key] = {
           printful_id: product.id,
           name: product.name,
-          url: product.display_url || `https://www.printful.com/dashboard/products/${product.id}`
+          url: `https://www.printful.com/dashboard/products/${product.id}`
         };
         console.log(`[Printful] Created ${key} product: ${product.id}`);
       } catch (err) {
@@ -103,8 +84,8 @@ async function createPrintfulProductsForMerch(imagePath, productName) {
     return results;
   } catch (err) {
     console.error('[Printful] Failed to create merch products:', err.message);
-    throw err;
+    return {}; // Return empty on complete failure, don't crash
   }
 }
 
-module.exports = { uploadDesignToPrintful, createPrintfulProduct, createPrintfulProductsForMerch };
+module.exports = { createPrintfulProduct, createPrintfulProductsForMerch };

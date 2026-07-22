@@ -96,11 +96,12 @@ router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
       try {
         const merchVariants = await resizeAllMerchVariants(req.file.path);
         
-        // Create Printful products
+        // Create Printful products with base URL
         let printfulProducts = {};
         if (process.env.PRINTFUL_API_KEY) {
           try {
-            printfulProducts = await createPrintfulProductsForMerch(req.file.path, title);
+            const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+            printfulProducts = await createPrintfulProductsForMerch(req.file.path, title, baseUrl);
             console.log(`[ADMIN] Created Printful products:`, printfulProducts);
           } catch (err) {
             console.warn(`[ADMIN] Printful sync failed (non-critical):`, err.message);
