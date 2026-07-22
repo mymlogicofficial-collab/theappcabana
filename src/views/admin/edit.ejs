@@ -30,8 +30,9 @@
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     textarea { resize: vertical; min-height: 120px; }
-    .preview-section { margin-top: 20px; }
+    .preview-section { margin-top: 20px; padding: 12px; background: rgba(102, 126, 234, 0.05); border: 1px solid #333; border-radius: 4px; }
     .preview-img { max-width: 300px; border-radius: 4px; margin-top: 10px; }
+    audio { width: 100%; margin-top: 10px; }
     .buttons { display: flex; gap: 15px; margin-top: 30px; }
     button { 
       flex: 1; 
@@ -49,6 +50,8 @@
     .error { color: #ff6b6b; margin-bottom: 20px; padding: 12px; background: rgba(255, 107, 107, 0.1); border-radius: 4px; }
     .info { font-size: 13px; color: #999; margin-top: 5px; }
     small { color: #999; font-size: 12px; }
+    .success { color: #28a745; font-size: 12px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -66,7 +69,7 @@
 
       <form method="POST" enctype="multipart/form-data">
         <label>Product Type *</label>
-        <select name="type" required>
+        <select name="type" required id="productType">
           <option value="app" <%= product.type === 'app' ? 'selected' : '' %>>App</option>
           <option value="music" <%= product.type === 'music' ? 'selected' : '' %>>Music</option>
           <option value="art" <%= product.type === 'art' ? 'selected' : '' %>>Digital Art</option>
@@ -82,12 +85,31 @@
         <label>Price (USD) *</label>
         <input type="number" name="price" step="0.01" min="0.99" value="<%= (product.price_cents / 100).toFixed(2) %>" required>
 
+        <!-- Music File Upload (only for music products) -->
+        <div id="musicFileSection" class="<%= product.type === 'music' ? '' : 'hidden' %>">
+          <label>Music File</label>
+          <input type="file" name="file" accept="audio/*">
+          <small>Upload a new music file to regenerate the preview (20-second clip from middle of song)</small>
+          <% if (product.file_path) { %>
+            <div class="preview-section">
+              <p style="font-size: 13px; margin-bottom: 10px;">Current file: <strong><%= product.file_path.split('/').pop() %></strong></p>
+              <% if (product.preview_url) { %>
+                <p style="font-size: 12px; margin-bottom: 8px;">Preview (middle section):</p>
+                <audio controls>
+                  <source src="<%= product.preview_url %>" type="audio/mpeg">
+                  Your browser does not support the audio element.
+                </audio>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+
         <% if (product.type !== 'physical') { %>
           <label>Cover Image</label>
           <input type="file" name="cover" accept="image/*">
           <% if (product.cover_url) { %>
             <div class="preview-section">
-              <p style="font-size: 13px; margin-top: 10px;">Current cover:</p>
+              <p style="font-size: 13px; margin-bottom: 10px;">Current cover:</p>
               <img src="<%= product.cover_url %>" alt="Cover" class="preview-img">
             </div>
           <% } %>
@@ -108,6 +130,19 @@
       </form>
     </div>
   </div>
+
+  <script>
+    const productTypeSelect = document.getElementById('productType');
+    const musicFileSection = document.getElementById('musicFileSection');
+
+    productTypeSelect.addEventListener('change', (e) => {
+      if (e.target.value === 'music') {
+        musicFileSection.classList.remove('hidden');
+      } else {
+        musicFileSection.classList.add('hidden');
+      }
+    });
+  </script>
 </body>
 </html>
 

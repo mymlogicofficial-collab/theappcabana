@@ -3,10 +3,19 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
+const { execSync } = require('child_process');
 const { pool } = require('../db');
 const printful = require('../services/printful');
 
 const router = express.Router();
+
+// Set FFmpeg path for Alpine Linux
+try {
+  ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+  ffmpeg.setFfprobePath('/usr/bin/ffprobe');
+} catch (err) {
+  console.warn('FFmpeg binaries not found at default Alpine paths');
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -34,6 +43,58 @@ function requireAuth(req, res, next) {
   next();
 }
 
+function requireAdmin(req, res, next) {
+  if (!req.session.user || !req.session.user.is_admin) {
+    return res.status(403).render('error', { message: 'Admin access required' });
+  }
+  next();
+}
+
+// Helper: Generate music preview using FFmpeg
+async function generateMusicPreview(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    try {
+      ffmpeg.ffprobe(inputPath, (err, metadata) => {
+        if (err) {
+          console.error('FFprobe error:', err.message);
+          return reject(err);
+        }
+
+        const duration = Math.floor(metadata.format.duration || 180);
+        const startTime = Math.max(0, Math.floor(duration / 2) - 10);
+        
+        console.log(`[FFmpeg] Song duration: ${duration}s, extracting from ${startTime}s for 20s preview`);
+
+        ffmpeg(inputPath)
+          .setStartTime(startTime)
+          .setDuration(20)
+          .audioCodec('libmp3lame')
+          .audioBitrate('128k')
+          .output(outputPath)
+          .on('start', (cmd) => {
+            console.log(`[FFmpeg] Starting preview generation: ${cmd}`);
+          })
+          .on('progress', (progress) => {
+            console.log(`[FFmpeg] Processing... ${Math.round(progress.percent || 0)}% complete`);
+          })
+          .on('end', () => {
+            console.log(`[FFmpeg] Preview successfully created: ${outputPath}`);
+            resolve();
+          })
+          .on('error', (err) => {
+            console.error(`[FFmpeg] Error generating preview:`, err.message);
+            reject(err);
+          })
+          .run();
+      });
+    } catch (err) {
+      console.error('[FFmpeg] Unexpected error:', err.message);
+      reject(err);
+    }
+  });
+}
+
+// CREATOR DASHBOARD - See their own products (approved or pending)
 router.get('/dashboard', requireAuth, async (req, res) => {
   try {
     const products = await pool.query(
@@ -48,11 +109,88 @@ router.get('/dashboard', requireAuth, async (req, res) => {
   }
 });
 
+// ADMIN VETTING QUEUE - See all pending products
+router.get('/vetting-queue', requireAdmin, async (req, res) => {
+  try {
+    const pending = await pool.query(`
+      SELECT p.*, u.display_name, u.email
+      FROM products p
+      JOIN users u ON p.user_id = u.id
+      WHERE p.is_approved = false
+      ORDER BY p.created_at DESC
+    `);
+
+    const approved = await pool.query(`
+      SELECT COUNT(*) as count FROM products WHERE is_approved = true
+    `);
+
+    res.render('admin/vetting-queue', { 
+      pending: pending.rows,
+      approvedCount: approved.rows[0].count
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('error', { message: 'Something went wrong' });
+  }
+});
+
+// APPROVE PRODUCT
+router.post('/approve/:id', requireAdmin, async (req, res) => {
+  try {
+    await pool.query(
+      'UPDATE products SET is_approved = true, updated_at = NOW() WHERE id = $1',
+      [req.params.id]
+    );
+    
+    console.log(`[Admin] Product approved: ID ${req.params.id}`);
+    res.json({ success: true, message: 'Product approved!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// REJECT PRODUCT
+router.post('/reject/:id', requireAdmin, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    
+    // We could store rejection reason in a separate table later
+    // For now, just delete the product
+    const product = await pool.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
+    
+    if (product.rows.length > 0) {
+      // Delete the uploaded files
+      const p = product.rows[0];
+      if (p.file_path) {
+        const filePath = path.join(__dirname, '../public', p.file_path);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
+      if (p.preview_url) {
+        const previewPath = path.join(__dirname, '../public', p.preview_url);
+        if (fs.existsSync(previewPath)) fs.unlinkSync(previewPath);
+      }
+      if (p.cover_url) {
+        const coverPath = path.join(__dirname, '../public', p.cover_url);
+        if (fs.existsSync(coverPath)) fs.unlinkSync(coverPath);
+      }
+    }
+
+    await pool.query('DELETE FROM products WHERE id = $1', [req.params.id]);
+    
+    console.log(`[Admin] Product rejected: ID ${req.params.id}, Reason: ${reason}`);
+    res.json({ success: true, message: 'Product rejected and deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.get('/upload', requireAuth, (req, res) => {
   res.render('admin/upload', { error: null });
 });
 
-// Digital product upload
+// Digital product upload - START UNAPPROVED
 router.post('/upload', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 }, { name: 'file', maxCount: 1 }]), async (req, res) => {
   const { title, description, price, type } = req.body;
   
@@ -76,51 +214,23 @@ router.post('/upload', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 
       previewUrl = `/uploads/${previewFilename}`;
 
       try {
-        // Get audio duration first, then extract from middle
-        await new Promise((resolve, reject) => {
-          ffmpeg.ffprobe(filePath, (err, metadata) => {
-            if (err) {
-              console.error('FFprobe error:', err);
-              reject(err);
-              return;
-            }
-
-            const duration = Math.floor(metadata.format.duration);
-            const startTime = Math.max(0, Math.floor(duration / 2) - 10); // Start 10 seconds before middle
-            
-            console.log(`Song duration: ${duration}s, extracting from ${startTime}s`);
-
-            ffmpeg(filePath)
-              .setStartTime(startTime)
-              .setDuration(20)
-              .audioCodec('libmp3lame')
-              .audioBitrate('128k')
-              .output(previewPath)
-              .on('end', () => {
-                console.log(`Preview created from middle of song: ${previewPath}`);
-                resolve();
-              })
-              .on('error', (err) => {
-                console.error('FFmpeg error:', err);
-                reject(err);
-              })
-              .run();
-          });
-        });
+        console.log(`[Upload] Generating preview for music file: ${req.files.file[0].filename}`);
+        await generateMusicPreview(filePath, previewPath);
+        console.log(`[Upload] Preview generated successfully at: ${previewUrl}`);
       } catch (ffmpegErr) {
-        console.error('Failed to create preview:', ffmpegErr.message);
-        // Don't fail the upload if preview fails, just skip it
+        console.error(`[Upload] Failed to generate preview:`, ffmpegErr.message);
         previewUrl = null;
       }
     }
     
     const result = await pool.query(`
       INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, preview_url, is_approved)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false)
       RETURNING id, slug
     `, [req.session.user.id, type, title, slug, description, price_cents, fileUrl, coverUrl, previewUrl]);
     
-    res.redirect(`/shop/product/${result.rows[0].slug}`);
+    console.log(`[Upload] Product created (PENDING APPROVAL): ID ${result.rows[0].id}`);
+    res.render('admin/upload', { success: 'Product uploaded! Waiting for approval from our team.' });
   } catch (err) {
     console.error(err);
     res.render('admin/upload', { error: 'Something went wrong: ' + err.message });
@@ -147,11 +257,10 @@ router.get('/edit/:id', requireAuth, async (req, res) => {
 });
 
 // Update product
-router.post('/edit/:id', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 }]), async (req, res) => {
+router.post('/edit/:id', requireAuth, upload.fields([{ name: 'cover', maxCount: 1 }, { name: 'file', maxCount: 1 }]), async (req, res) => {
   const { title, description, price, type, is_featured } = req.body;
 
   try {
-    // Verify ownership
     const product = await pool.query(
       'SELECT * FROM products WHERE id = $1 AND user_id = $2',
       [req.params.id, req.session.user.id]
@@ -164,18 +273,47 @@ router.post('/edit/:id', requireAuth, upload.fields([{ name: 'cover', maxCount: 
     const p = product.rows[0];
     const price_cents = Math.round(parseFloat(price) * 100) || 0;
     let coverUrl = p.cover_url;
+    let fileUrl = p.file_path;
+    let previewUrl = p.preview_url;
 
-    // Update cover if new one uploaded
     if (req.files.cover) {
       coverUrl = `/uploads/${req.files.cover[0].filename}`;
     }
 
+    if (req.files.file && type === 'music') {
+      fileUrl = `/uploads/${req.files.file[0].filename}`;
+      const filePath = path.join(__dirname, '../public/uploads', req.files.file[0].filename);
+      
+      try {
+        console.log(`[Edit] Regenerating preview for updated music file: ${req.files.file[0].filename}`);
+        
+        const previewFilename = `preview-${Date.now()}-${Math.random().toString(36).slice(2)}.mp3`;
+        const previewPath = path.join(__dirname, '../public/uploads', previewFilename);
+        previewUrl = `/uploads/${previewFilename}`;
+        
+        await generateMusicPreview(filePath, previewPath);
+        console.log(`[Edit] Preview regenerated successfully at: ${previewUrl}`);
+        
+        if (p.preview_url) {
+          const oldPreviewPath = path.join(__dirname, '../public/uploads', p.preview_url.split('/').pop());
+          if (fs.existsSync(oldPreviewPath)) {
+            fs.unlinkSync(oldPreviewPath);
+            console.log(`[Edit] Deleted old preview: ${oldPreviewPath}`);
+          }
+        }
+      } catch (ffmpegErr) {
+        console.error(`[Edit] Failed to regenerate preview:`, ffmpegErr.message);
+        previewUrl = p.preview_url;
+      }
+    }
+
     await pool.query(`
       UPDATE products 
-      SET title = $1, description = $2, price_cents = $3, type = $4, cover_url = $5, is_featured = $6, updated_at = NOW()
-      WHERE id = $7
-    `, [title, description, price_cents, type, coverUrl, is_featured === 'true', req.params.id]);
+      SET title = $1, description = $2, price_cents = $3, type = $4, cover_url = $5, file_path = $6, preview_url = $7, is_featured = $8, updated_at = NOW()
+      WHERE id = $9
+    `, [title, description, price_cents, type, coverUrl, fileUrl, previewUrl, is_featured === 'true', req.params.id]);
 
+    console.log(`[Edit] Product updated: ID ${req.params.id}`);
     res.redirect(`/shop/product/${p.slug}`);
   } catch (err) {
     console.error(err);
@@ -183,21 +321,20 @@ router.post('/edit/:id', requireAuth, upload.fields([{ name: 'cover', maxCount: 
       'SELECT * FROM products WHERE id = $1 AND user_id = $2',
       [req.params.id, req.session.user.id]
     );
-    res.render('admin/edit', { product: product.rows[0], error: 'Failed to update product' });
+    res.render('admin/edit', { product: product.rows[0], error: 'Failed to update product: ' + err.message });
   }
 });
 
 // Physical product upload page
 router.get('/upload-physical', requireAuth, (req, res) => {
-  res.render('admin/upload-physical', { error: null });
+  res.render('admin/upload-physical', { error: null, success: null });
 });
 
-// Physical product upload handler
+// Physical product upload - START UNAPPROVED
 router.post('/upload-physical', requireAuth, upload.fields([{ name: 'design', maxCount: 1 }]), async (req, res) => {
   const { title, description, price, category } = req.body;
   let variants = req.body.variants || [];
   
-  // Ensure variants is an array
   if (typeof variants === 'string') {
     variants = [variants];
   }
@@ -205,7 +342,7 @@ router.post('/upload-physical', requireAuth, upload.fields([{ name: 'design', ma
   try {
     if (!title || !category || !req.files.design || variants.length === 0) {
       return res.render('admin/upload-physical', { 
-        error: 'Missing required fields or no variants selected' 
+        error: 'Missing required fields or no variants selected', success: null 
       });
     }
     
@@ -213,47 +350,48 @@ router.post('/upload-physical', requireAuth, upload.fields([{ name: 'design', ma
     const price_cents = Math.round(parseFloat(price) * 100) || 0;
     const designUrl = `/uploads/${req.files.design[0].filename}`;
     
-    // Create product in our DB (marked as physical)
     const result = await pool.query(`
       INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, printful_category, is_approved)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false)
       RETURNING id, slug
     `, [req.session.user.id, 'physical', title, slug, description, price_cents, designUrl, designUrl, category]);
     
     const productId = result.rows[0].id;
     
-    // Sync to Printful
     try {
       const printfulProduct = await printful.createPrintfulProduct({
         external_id: `cabana-product-${productId}`,
         name: title,
         description: description || '',
         category: category,
-        variants: variants.map(v => parseInt(v))
+        variants: []
       });
 
-      // Save Printful sync info
       await pool.query(`
         INSERT INTO physical_products (product_id, printful_product_id, printful_category, selected_variants, design_file_url, sync_status)
         VALUES ($1, $2, $3, $4, $5, 'synced')
       `, [productId, printfulProduct.id, category, JSON.stringify(variants), designUrl]);
 
-      res.redirect(`/shop/product/${result.rows[0].slug}`);
+      console.log(`[Upload] Physical product created (PENDING APPROVAL): ID ${productId}`);
+      res.render('admin/upload-physical', { 
+        success: 'Physical product uploaded! Waiting for approval. Once approved, customers can order from Printful.', 
+        error: null
+      });
     } catch (printfulErr) {
       console.error('Printful sync error:', printfulErr.message);
-      // Still save the product but mark sync as failed
       await pool.query(`
         INSERT INTO physical_products (product_id, printful_category, selected_variants, design_file_url, sync_status)
         VALUES ($1, $2, $3, $4, 'failed')
       `, [productId, category, JSON.stringify(variants), designUrl]);
 
       res.render('admin/upload-physical', { 
-        error: `Product created but failed to sync to Printful: ${printfulErr.message}. Retry sync manually later.` 
+        success: 'Physical product uploaded and pending approval. Printful sync will retry after approval.', 
+        error: null
       });
     }
   } catch (err) {
     console.error(err);
-    res.render('admin/upload-physical', { error: 'Something went wrong' });
+    res.render('admin/upload-physical', { error: 'Something went wrong', success: null });
   }
 });
 
@@ -262,13 +400,12 @@ router.get('/bulk/upload-ui', requireAuth, (req, res) => {
   res.render('admin/bulk-upload', { error: null, success: null });
 });
 
-// Bulk upload - manual entry
+// Bulk upload - START UNAPPROVED
 router.post('/bulk/upload-manual', requireAuth, upload.any(), async (req, res) => {
   try {
     const products = req.body.products || {};
     const fileMap = {};
     
-    // Build file map from uploads
     if (req.files) {
       req.files.forEach(file => {
         const match = file.fieldname.match(/products\[(\d+)\]\[files\]/);
@@ -283,7 +420,6 @@ router.post('/bulk/upload-manual', requireAuth, upload.any(), async (req, res) =
     let uploadedCount = 0;
     const errors = [];
 
-    // Process each product
     for (const [idx, productData] of Object.entries(products)) {
       try {
         if (!productData.title || !productData.type) {
@@ -301,11 +437,11 @@ router.post('/bulk/upload-manual', requireAuth, upload.any(), async (req, res) =
         }
 
         const fileUrl = files[0];
-        const coverUrl = files[0]; // Use first file as cover
+        const coverUrl = files[0];
 
         await pool.query(`
           INSERT INTO products (user_id, type, title, slug, description, price_cents, file_path, cover_url, is_approved)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false)
           RETURNING id
         `, [req.session.user.id, productData.type, productData.title, slug, productData.description || '', price_cents, fileUrl, coverUrl]);
 
@@ -317,7 +453,7 @@ router.post('/bulk/upload-manual', requireAuth, upload.any(), async (req, res) =
     }
 
     const message = uploadedCount > 0 
-      ? `✓ Successfully uploaded ${uploadedCount} product${uploadedCount !== 1 ? 's' : ''}`
+      ? `✓ Successfully uploaded ${uploadedCount} product${uploadedCount !== 1 ? 's' : ''} - All pending approval`
       : 'No products uploaded';
 
     res.render('admin/bulk-upload', { 

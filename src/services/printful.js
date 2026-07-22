@@ -47,12 +47,15 @@ function makeRequest(method, path, data = null) {
 const PRODUCT_TYPE_MAP = {
   't-shirts': 1,
   'hoodies': 18,
+  'sweatshirts': 28,
   'mugs': 10,
   'hats': 33,
+  'beanies': 34,
   'phone-cases': 46,
   'pillows': 48,
   'blankets': 47,
-  'stickers': 36
+  'stickers': 36,
+  'tote-bags': 49
 };
 
 /**
@@ -99,7 +102,7 @@ async function getProductVariants(productType) {
 }
 
 /**
- * Create a product in your Printful store
+ * Create a product in your Printful store (simple version - just create product without variants)
  */
 async function createPrintfulProduct(data) {
   try {
@@ -108,17 +111,18 @@ async function createPrintfulProduct(data) {
       throw new Error(`Unknown product category: ${data.category}`);
     }
 
-    // Create product in your store with selected variants
-    const response = await makeRequest('POST', '/products', {
-      external_id: data.external_id, // Link to our product ID
+    console.log(`[Printful] Creating product: ${data.name} (catalog product ${productId})`);
+
+    // For now, just create a simple store product
+    // In a real implementation, you'd add the image to Printful first
+    // and then create a product with it
+    const response = await makeRequest('POST', '/store/products', {
+      external_id: data.external_id,
       name: data.name,
-      description: data.description || '',
-      variants: data.variants.map(variantId => ({
-        id: variantId,
-        external_id: `${data.external_id}-${variantId}`
-      }))
+      description: data.description || ''
     });
 
+    console.log(`[Printful] Product created with ID: ${response.result.id}`);
     return response.result;
   } catch (err) {
     console.error('Error creating Printful product:', err.message);
@@ -131,7 +135,7 @@ async function createPrintfulProduct(data) {
  */
 async function getPrintfulProduct(printfulProductId) {
   try {
-    const response = await makeRequest('GET', `/products/${printfulProductId}`);
+    const response = await makeRequest('GET', `/store/products/${printfulProductId}`);
     return response.result;
   } catch (err) {
     console.error(`Error fetching Printful product ${printfulProductId}:`, err.message);
