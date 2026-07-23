@@ -104,16 +104,16 @@ router.get('/product/:slug', async (req, res) => {
 // Merch request - customer requests merch, you fulfill manually
 router.post('/merch-request', async (req, res) => {
   try {
-    const { product_id, category, variant, product_title, product_slug } = req.body;
+    const { product_id, category, variant, product_title, product_slug, image_url } = req.body;
 
-    // Store request in DB
+    // Store request in DB with image URL and product title
     const userId = req.session?.user?.id || null;
     await pool.query(`
-      INSERT INTO merch_requests (product_id, user_id, category, variant, status, created_at)
-      VALUES ($1, $2, $3, $4, 'pending', NOW())
-    `, [product_id, userId, category, variant]);
+      INSERT INTO merch_requests (product_id, user_id, category, variant, product_title, image_url, status, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, 'pending', NOW())
+    `, [product_id, userId, category, variant, product_title, image_url]);
 
-    console.log(`[MERCH] Request: ${product_title} - ${category}/${variant}`);
+    console.log(`[MERCH] Request: ${product_title} - ${category}/${variant} - ${image_url}`);
     res.json({ success: true, message: 'Request submitted' });
   } catch (err) {
     console.error('[MERCH] Error:', err.message);
