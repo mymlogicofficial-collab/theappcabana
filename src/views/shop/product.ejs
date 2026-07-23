@@ -37,6 +37,7 @@
     .sub-options.active { display: block; }
     .sub-option { padding: 8px; background: #0a0e27; border: 1px solid #333; color: #aaa; border-radius: 4px; margin-bottom: 8px; cursor: pointer; text-align: center; }
     .sub-option:hover { border-color: #667eea; color: #667eea; }
+    .success-msg { color: #51cf66; margin-top: 20px; text-align: center; }
   </style>
 </head>
 <body>
@@ -95,44 +96,48 @@
         <!-- Hat Options -->
         <div id="hats-options" class="sub-options">
           <p style="margin-bottom: 10px; color: #aaa;">Styles:</p>
-          <div class="sub-option" onclick="goToPrintful('hats', 'trucker')">Trucker Cap</div>
-          <div class="sub-option" onclick="goToPrintful('hats', 'dad')">Worn Dad Cap</div>
+          <div class="sub-option" onclick="submitMerchRequest('hats', 'trucker')">Trucker Cap</div>
+          <div class="sub-option" onclick="submitMerchRequest('hats', 'dad')">Worn Dad Cap</div>
         </div>
 
         <!-- Shirt Options -->
         <div id="shirts-options" class="sub-options">
           <p style="margin-bottom: 10px; color: #aaa;">Sizes: S, M, L, XL, 2XL, 3XL</p>
-          <div class="sub-option" onclick="goToPrintful('shirts', 'all')">All Sizes</div>
+          <div class="sub-option" onclick="submitMerchRequest('shirts', 'all')">All Sizes</div>
         </div>
 
         <!-- Sticker Options -->
         <div id="stickers-options" class="sub-options">
           <p style="margin-bottom: 10px; color: #aaa;">Sizes & Materials:</p>
-          <div class="sub-option" onclick="goToPrintful('stickers', '3x3-acrylic')">3x3 Acrylic</div>
-          <div class="sub-option" onclick="goToPrintful('stickers', '3x3-holographic')">3x3 Holographic</div>
-          <div class="sub-option" onclick="goToPrintful('stickers', '4x4-acrylic')">4x4 Acrylic</div>
-          <div class="sub-option" onclick="goToPrintful('stickers', '4x4-holographic')">4x4 Holographic</div>
-          <div class="sub-option" onclick="goToPrintful('stickers', '5x5-acrylic')">5x5 Acrylic</div>
-          <div class="sub-option" onclick="goToPrintful('stickers', '5x5-holographic')">5x5 Holographic</div>
+          <div class="sub-option" onclick="submitMerchRequest('stickers', '3x3-acrylic')">3x3 Acrylic</div>
+          <div class="sub-option" onclick="submitMerchRequest('stickers', '3x3-holographic')">3x3 Holographic</div>
+          <div class="sub-option" onclick="submitMerchRequest('stickers', '4x4-acrylic')">4x4 Acrylic</div>
+          <div class="sub-option" onclick="submitMerchRequest('stickers', '4x4-holographic')">4x4 Holographic</div>
+          <div class="sub-option" onclick="submitMerchRequest('stickers', '5x5-acrylic')">5x5 Acrylic</div>
+          <div class="sub-option" onclick="submitMerchRequest('stickers', '5x5-holographic')">5x5 Holographic</div>
         </div>
 
         <!-- Mug Options -->
         <div id="mugs-options" class="sub-options">
           <p style="margin-bottom: 10px; color: #aaa;">Colors:</p>
-          <div class="sub-option" onclick="goToPrintful('mugs', 'white')">White Mug</div>
-          <div class="sub-option" onclick="goToPrintful('mugs', 'grey')">Grey Mug</div>
-          <div class="sub-option" onclick="goToPrintful('mugs', 'maroon')">Maroon Mug</div>
+          <div class="sub-option" onclick="submitMerchRequest('mugs', 'white')">White Mug</div>
+          <div class="sub-option" onclick="submitMerchRequest('mugs', 'grey')">Grey Mug</div>
+          <div class="sub-option" onclick="submitMerchRequest('mugs', 'maroon')">Maroon Mug</div>
         </div>
 
         <!-- Blanket Options -->
         <div id="blankets-options" class="sub-options">
-          <div class="sub-option" onclick="goToPrintful('blankets', 'throw')">Throw Blanket</div>
+          <div class="sub-option" onclick="submitMerchRequest('blankets', 'throw')">Throw Blanket</div>
         </div>
 
         <!-- Sweater Options -->
         <div id="sweaters-options" class="sub-options">
           <p style="margin-bottom: 10px; color: #aaa;">Sizes: S, M, L, XL, 2XL, 3XL</p>
-          <div class="sub-option" onclick="goToPrintful('sweaters', 'all')">All Sizes</div>
+          <div class="sub-option" onclick="submitMerchRequest('sweaters', 'all')">All Sizes</div>
+        </div>
+
+        <div id="successMsg" class="success-msg" style="display: none;">
+          ✓ Request sent! We'll create this merch and notify you when it's ready.
         </div>
       </div>
     </div>
@@ -171,10 +176,9 @@
   </div>
 
   <script>
-    const PRINTFUL_STORE = 'https://www.printful.com/custom/favorites/products';
-
     function openMerchModal() {
       document.getElementById('merchModal').classList.add('active');
+      document.getElementById('successMsg').style.display = 'none';
     }
 
     function closeMerchModal() {
@@ -192,15 +196,30 @@
       document.getElementById(optionsId).classList.add('active');
     }
 
-    function goToPrintful(category, variant) {
-      const title = '<%= product.title %>';
-      const imageUrl = window.location.origin + '/uploads/merch/<%= product.slug %>-' + category + '.png';
-      
-      // Go to Printful store with image params
-      const url = PRINTFUL_STORE + '?design=' + encodeURIComponent(title) + '&image=' + encodeURIComponent(imageUrl) + '&category=' + category + '&variant=' + variant;
-      
-      window.open(url, '_blank');
-      closeMerchModal();
+    async function submitMerchRequest(category, variant) {
+      try {
+        const response = await fetch('/shop/merch-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id: <%= product.id %>,
+            category: category,
+            variant: variant,
+            product_title: '<%= product.title %>',
+            product_slug: '<%= product.slug %>'
+          })
+        });
+
+        if (response.ok) {
+          document.getElementById('successMsg').style.display = 'block';
+          setTimeout(() => closeMerchModal(), 2000);
+        } else {
+          alert('Error submitting request. Please try again.');
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        alert('Error submitting request');
+      }
     }
 
     function downloadProduct(productId) {

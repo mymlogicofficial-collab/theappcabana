@@ -101,6 +101,26 @@ router.get('/product/:slug', async (req, res) => {
   }
 });
 
+// Merch request - customer requests merch, you fulfill manually
+router.post('/merch-request', async (req, res) => {
+  try {
+    const { product_id, category, variant, product_title, product_slug } = req.body;
+
+    // Store request in DB
+    const userId = req.session?.user?.id || null;
+    await pool.query(`
+      INSERT INTO merch_requests (product_id, user_id, category, variant, status, created_at)
+      VALUES ($1, $2, $3, $4, 'pending', NOW())
+    `, [product_id, userId, category, variant]);
+
+    console.log(`[MERCH] Request: ${product_title} - ${category}/${variant}`);
+    res.json({ success: true, message: 'Request submitted' });
+  } catch (err) {
+    console.error('[MERCH] Error:', err.message);
+    res.status(500).json({ error: 'Failed to submit request' });
+  }
+});
+
 // Checkout page - choose digital or merch
 router.get('/checkout/:product_id', requireAuth, async (req, res) => {
   try {
@@ -170,30 +190,6 @@ router.post('/checkout/digital/:product_id', requireAuth, async (req, res) => {
   }
 });
 
-// Redirect to Printful for physical merch
-router.get('/checkout/merch/:product_id', requireAuth, async (req, res) => {
-  try {
-    const product = await pool.query(
-      'SELECT * FROM products WHERE id = $1',
-      [req.params.product_id]
-    );
-
-    if (product.rows.length === 0) {
-      return res.status(404).render('error', { message: 'Product not found' });
-    }
-
-    const p = product.rows[0];
-
-    // Redirect to your Printful store with product info
-    const printfulUrl = `${process.env.PRINTFUL_STORE_URL || 'https://your-store.printful.com'}?product=${encodeURIComponent(p.title)}&price=${p.price_cents / 100}`;
-    
-    res.redirect(printfulUrl);
-  } catch (err) {
-    console.error(err);
-    res.status(500).render('error', { message: 'Something went wrong' });
-  }
-});
-
 // Handle successful payment
 router.get('/success', requireAuth, async (req, res) => {
   try {
@@ -260,4 +256,3 @@ router.get('/download/:product_id', requireAuth, async (req, res) => {
 });
 
 module.exports = router;
-

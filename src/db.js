@@ -97,6 +97,20 @@ async function initDatabase() {
       )
     `);
 
+    // Merch requests from customers
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS merch_requests (
+        id SERIAL PRIMARY KEY,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        category VARCHAR(50) NOT NULL,
+        variant VARCHAR(100) NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     // Donations table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS donations (
@@ -167,4 +181,3 @@ async function initDatabase() {
 }
 
 module.exports = { pool, initDatabase };
-
