@@ -90,19 +90,21 @@ router.post('/upload', requireAuth, upload.single('file'), async (req, res) => {
     `, [req.session.user.id, type, title, slug, description, price_cents, filePath, previewUrl, coverUrl]);
     
     const productId = result.rows[0].id;
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
 
     // Auto-resize and sync to physical inventory + Printful if requested and image type
     if (add_to_physical === 'on' && (type === 'art' || req.file.mimetype.includes('image'))) {
       try {
         const merchVariants = await resizeAllMerchVariants(req.file.path);
         
-        // Create Printful products with base URL
+        // Create Printful products with resized image URLs
         let printfulProducts = {};
         if (process.env.PRINTFUL_API_KEY) {
           try {
-            const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-            printfulProducts = await createPrintfulProductsForMerch(req.file.path, title, baseUrl);
-            console.log(`[ADMIN] Created Printful products:`, printfulProducts);
+            // Use the resized shirt image as the primary design
+            const designImageUrl = `${baseUrl}/uploads/merch/${slug}-shirt.png`;
+            printfulProducts = await createPrintfulProductsForMerch(designImageUrl, title);
+            console.log(`[ADMIN] Created Printful products:`, Object.keys(printfulProducts));
           } catch (err) {
             console.warn(`[ADMIN] Printful sync failed (non-critical):`, err.message);
           }
