@@ -102,9 +102,11 @@ async function initDatabase() {
       CREATE TABLE IF NOT EXISTS merch_requests (
         id SERIAL PRIMARY KEY,
         product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        product_title VARCHAR(255),
         user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
         category VARCHAR(50) NOT NULL,
         variant VARCHAR(100) NOT NULL,
+        image_url TEXT NOT NULL,
         status VARCHAR(50) DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
@@ -171,6 +173,29 @@ async function initDatabase() {
     } catch (err) {
       if (!err.message.includes('already exists')) {
         console.warn('Warning adding printful_category:', err.message);
+      }
+    }
+
+    // Add image_url and product_title to merch_requests if needed
+    try {
+      await pool.query(`
+        ALTER TABLE merch_requests ADD COLUMN image_url TEXT
+      `);
+      console.log('Added image_url to merch_requests');
+    } catch (err) {
+      if (!err.message.includes('already exists')) {
+        console.warn('Warning adding image_url:', err.message);
+      }
+    }
+
+    try {
+      await pool.query(`
+        ALTER TABLE merch_requests ADD COLUMN product_title VARCHAR(255)
+      `);
+      console.log('Added product_title to merch_requests');
+    } catch (err) {
+      if (!err.message.includes('already exists')) {
+        console.warn('Warning adding product_title:', err.message);
       }
     }
 
