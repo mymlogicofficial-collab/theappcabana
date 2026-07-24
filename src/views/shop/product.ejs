@@ -198,6 +198,7 @@
 
     async function submitMerchRequest(category, variant) {
       try {
+        const imageUrl = window.location.origin + '/uploads/merch/<%= product.slug %>-' + category + '.png';
         const response = await fetch('/shop/merch-request', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -206,7 +207,8 @@
             category: category,
             variant: variant,
             product_title: '<%= product.title %>',
-            product_slug: '<%= product.slug %>'
+            product_slug: '<%= product.slug %>',
+            image_url: imageUrl
           })
         });
 
